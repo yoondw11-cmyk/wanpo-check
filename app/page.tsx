@@ -214,9 +214,18 @@ type HourlyWeather = {
   radiation: number;
 };
 
+type DogSex = "unknown" | "male" | "female";
+type NeuteredStatus = "unknown" | "yes" | "no";
+
 type DogProfile = {
   name: string;
   breed: BreedType;
+  birthday?: string;
+  weight?: string;
+  sex?: DogSex;
+  neutered?: NeuteredStatus;
+  allergies?: string;
+  medicalNotes?: string;
 };
 
 function getText(lang: Language) {
@@ -492,12 +501,76 @@ ${APP_URL}`;
 ${APP_URL}`;
 }
 
+
+function calculateDogAge(birthday: string | undefined, lang: Language) {
+  if (!birthday) {
+    return lang === "ko" ? "미입력" : "未入力";
+  }
+
+  const birthDate = new Date(birthday);
+
+  if (Number.isNaN(birthDate.getTime())) {
+    return lang === "ko" ? "미입력" : "未入力";
+  }
+
+  const today = new Date();
+
+  let years = today.getFullYear() - birthDate.getFullYear();
+  let months = today.getMonth() - birthDate.getMonth();
+
+  if (today.getDate() < birthDate.getDate()) {
+    months -= 1;
+  }
+
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+
+  if (years <= 0 && months <= 0) {
+    return lang === "ko" ? "1개월 미만" : "1か月未満";
+  }
+
+  if (years <= 0) {
+    return lang === "ko" ? `${months}개월` : `${months}か月`;
+  }
+
+  if (months <= 0) {
+    return lang === "ko" ? `${years}살` : `${years}歳`;
+  }
+
+  return lang === "ko" ? `${years}살 ${months}개월` : `${years}歳 ${months}か月`;
+}
+
+function getSexLabel(sex: DogSex | undefined, lang: Language) {
+  if (sex === "male") return lang === "ko" ? "남아" : "男の子";
+  if (sex === "female") return lang === "ko" ? "여아" : "女の子";
+  return lang === "ko" ? "미입력" : "未入力";
+}
+
+function getNeuteredLabel(status: NeuteredStatus | undefined, lang: Language) {
+  if (status === "yes") return lang === "ko" ? "완료" : "済み";
+  if (status === "no") return lang === "ko" ? "미완료" : "未実施";
+  return lang === "ko" ? "미입력" : "未入力";
+}
+
+function getEmptyText(lang: Language) {
+  return lang === "ko" ? "미입력" : "未入力";
+}
+
 export default function Home() {
   const [lang, setLang] = useState<Language>("ko");
 
   const [dogProfile, setDogProfile] = useState<DogProfile | null>(null);
   const [dogNameInput, setDogNameInput] = useState("");
   const [breedInput, setBreedInput] = useState<BreedType>("shiba");
+  const [birthdayInput, setBirthdayInput] = useState("");
+  const [weightInput, setWeightInput] = useState("");
+  const [sexInput, setSexInput] = useState<DogSex>("unknown");
+  const [neuteredInput, setNeuteredInput] =
+    useState<NeuteredStatus>("unknown");
+  const [allergyInput, setAllergyInput] = useState("");
+  const [medicalNoteInput, setMedicalNoteInput] = useState("");
 
   const [selectedSurface, setSelectedSurface] =
     useState<SurfaceType>("asphalt");
@@ -719,9 +792,15 @@ export default function Home() {
       return;
     }
 
-    const profile = {
+    const profile: DogProfile = {
       name: trimmedName,
       breed: breedInput,
+      birthday: birthdayInput,
+      weight: weightInput.trim(),
+      sex: sexInput,
+      neutered: neuteredInput,
+      allergies: allergyInput.trim(),
+      medicalNotes: medicalNoteInput.trim(),
     };
 
     setDogProfile(profile);
@@ -729,10 +808,27 @@ export default function Home() {
   }
 
   function resetDogProfile() {
-    localStorage.removeItem("wanpo-dog-profile");
+    if (dogProfile) {
+      setDogNameInput(dogProfile.name);
+      setBreedInput(dogProfile.breed);
+      setBirthdayInput(dogProfile.birthday ?? "");
+      setWeightInput(dogProfile.weight ?? "");
+      setSexInput(dogProfile.sex ?? "unknown");
+      setNeuteredInput(dogProfile.neutered ?? "unknown");
+      setAllergyInput(dogProfile.allergies ?? "");
+      setMedicalNoteInput(dogProfile.medicalNotes ?? "");
+    } else {
+      setDogNameInput("");
+      setBreedInput("shiba");
+      setBirthdayInput("");
+      setWeightInput("");
+      setSexInput("unknown");
+      setNeuteredInput("unknown");
+      setAllergyInput("");
+      setMedicalNoteInput("");
+    }
+
     setDogProfile(null);
-    setDogNameInput("");
-    setBreedInput("shiba");
   }
 
   function startTimer() {
@@ -856,6 +952,164 @@ export default function Home() {
               </div>
             </div>
 
+
+            <div className="relative z-10 mt-5 rounded-3xl bg-white p-4 shadow-inner">
+              <p className="mb-3 text-sm font-black text-slate-700">
+                {lang === "ko" ? "강아지 기본 정보" : "ワンちゃんの基本情報"}
+              </p>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="text-sm font-bold text-slate-700">
+                    {lang === "ko" ? "생일" : "誕生日"}
+                  </label>
+                  <input
+                    type="date"
+                    value={birthdayInput}
+                    onChange={(e) => setBirthdayInput(e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    {lang === "ko"
+                      ? `자동 계산 나이: ${calculateDogAge(birthdayInput, lang)}`
+                      : `自動計算の年齢: ${calculateDogAge(birthdayInput, lang)}`}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-slate-700">
+                    {lang === "ko" ? "체중 kg" : "体重 kg"}
+                  </label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={weightInput}
+                    onChange={(e) => setWeightInput(e.target.value)}
+                    placeholder={lang === "ko" ? "예: 5.2" : "例：5.2"}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                <div>
+                  <p className="mb-2 text-sm font-bold text-slate-700">
+                    {lang === "ko" ? "성별" : "性別"}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      {
+                        value: "unknown",
+                        labelKo: "미입력",
+                        labelJa: "未入力",
+                      },
+                      {
+                        value: "male",
+                        labelKo: "남아",
+                        labelJa: "男の子",
+                      },
+                      {
+                        value: "female",
+                        labelKo: "여아",
+                        labelJa: "女の子",
+                      },
+                    ].map((item) => {
+                      const isSelected = sexInput === item.value;
+
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => setSexInput(item.value as DogSex)}
+                          className={`rounded-2xl px-3 py-3 text-sm font-black shadow ${
+                            isSelected
+                              ? "bg-blue-500 text-white"
+                              : "bg-white text-slate-700"
+                          }`}
+                        >
+                          {lang === "ko" ? item.labelKo : item.labelJa}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-sm font-bold text-slate-700">
+                    {lang === "ko" ? "중성화 여부" : "避妊・去勢"}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      {
+                        value: "unknown",
+                        labelKo: "미입력",
+                        labelJa: "未入力",
+                      },
+                      {
+                        value: "yes",
+                        labelKo: "완료",
+                        labelJa: "済み",
+                      },
+                      {
+                        value: "no",
+                        labelKo: "미완료",
+                        labelJa: "未実施",
+                      },
+                    ].map((item) => {
+                      const isSelected = neuteredInput === item.value;
+
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() =>
+                            setNeuteredInput(item.value as NeuteredStatus)
+                          }
+                          className={`rounded-2xl px-3 py-3 text-sm font-black shadow ${
+                            isSelected
+                              ? "bg-slate-900 text-white"
+                              : "bg-white text-slate-700"
+                          }`}
+                        >
+                          {lang === "ko" ? item.labelKo : item.labelJa}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-slate-700">
+                    {lang === "ko" ? "알레르기 / 주의사항" : "アレルギー・注意事項"}
+                  </label>
+                  <textarea
+                    value={allergyInput}
+                    onChange={(e) => setAllergyInput(e.target.value)}
+                    placeholder={
+                      lang === "ko"
+                        ? "예: 닭고기 알레르기, 더위에 약함"
+                        : "例：鶏肉アレルギー、暑さに弱い"
+                    }
+                    className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-slate-700">
+                    {lang === "ko" ? "주의해야 할 질병 / 메모" : "持病・メモ"}
+                  </label>
+                  <textarea
+                    value={medicalNoteInput}
+                    onChange={(e) => setMedicalNoteInput(e.target.value)}
+                    placeholder={
+                      lang === "ko"
+                        ? "예: 슬개골 주의, 심장질환, 피부질환 등"
+                        : "例：膝蓋骨に注意、心疾患、皮膚疾患など"
+                    }
+                    className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-400"
+                  />
+                </div>
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={saveDogProfile}
@@ -893,34 +1147,109 @@ export default function Home() {
           </div>
 
           <div className="relative z-10 mb-5 rounded-3xl bg-white p-4 shadow">
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
-  <img
-    src={breedData[dogProfile.breed].image}
-    alt={lang === "ko" ? breedData[dogProfile.breed].labelKo : breedData[dogProfile.breed].labelJa}
-    className="h-full w-full object-cover"
-  />
-</div>
-              <div>
-                <p className="text-sm text-slate-500">
-                  {lang === "ko"
-                    ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
-                    : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
+                  <img
+                    src={breedData[dogProfile.breed].image}
+                    alt={
+                      lang === "ko"
+                        ? breedData[dogProfile.breed].labelKo
+                        : breedData[dogProfile.breed].labelJa
+                    }
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm text-slate-500">
+                    {lang === "ko"
+                      ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
+                      : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
+                  </p>
+                  <p className="text-xl font-black">
+                    {dogProfile.name}
+                    {t.nowWalkQuestion}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={resetDogProfile}
+                className="shrink-0 rounded-full bg-slate-100 px-4 py-2 text-xs font-black text-slate-600"
+              >
+                {lang === "ko" ? "수정" : "編集"}
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="font-bold text-slate-400">
+                  {lang === "ko" ? "나이" : "年齢"}
                 </p>
-                <p className="text-xl font-black">
-                  {dogProfile.name}
-                  {t.nowWalkQuestion}
+                <p className="mt-1 font-black text-slate-700">
+                  {calculateDogAge(dogProfile.birthday, lang)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="font-bold text-slate-400">
+                  {lang === "ko" ? "체중" : "体重"}
+                </p>
+                <p className="mt-1 font-black text-slate-700">
+                  {dogProfile.weight
+                    ? `${dogProfile.weight} kg`
+                    : getEmptyText(lang)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="font-bold text-slate-400">
+                  {lang === "ko" ? "성별" : "性別"}
+                </p>
+                <p className="mt-1 font-black text-slate-700">
+                  {getSexLabel(dogProfile.sex, lang)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="font-bold text-slate-400">
+                  {lang === "ko" ? "중성화" : "避妊・去勢"}
+                </p>
+                <p className="mt-1 font-black text-slate-700">
+                  {getNeuteredLabel(dogProfile.neutered, lang)}
                 </p>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={resetDogProfile}
-              className="mt-3 text-xs font-bold text-slate-400 underline"
-            >
-              {t.resetProfile}
-            </button>
+            {(dogProfile.allergies || dogProfile.medicalNotes) && (
+              <div className="mt-3 rounded-2xl bg-red-50 p-3 text-xs leading-5 text-slate-700">
+                <p className="font-black text-red-600">
+                  {lang === "ko" ? "주의 정보" : "注意情報"}
+                </p>
+
+                {dogProfile.allergies && (
+                  <p className="mt-1">
+                    <span className="font-bold">
+                      {lang === "ko"
+                        ? "알레르기/주의사항: "
+                        : "アレルギー・注意事項: "}
+                    </span>
+                    {dogProfile.allergies}
+                  </p>
+                )}
+
+                {dogProfile.medicalNotes && (
+                  <p className="mt-1">
+                    <span className="font-bold">
+                      {lang === "ko" ? "질병/메모: " : "持病・メモ: "}
+                    </span>
+                    {dogProfile.medicalNotes}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="relative z-10 mb-5 rounded-2xl bg-white p-4 shadow">
@@ -1127,7 +1456,7 @@ export default function Home() {
               <p className="mt-1">{t.cautionSub}</p>
             </div>
           </div>
-
+               
           <div className="relative z-10 mt-5 rounded-3xl bg-white p-4 shadow">
             <p className="text-sm font-black text-slate-700">{t.shareTitle}</p>
             <p className="mt-1 text-sm text-slate-500">{t.shareDescription}</p>
