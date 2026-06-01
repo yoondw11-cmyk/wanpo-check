@@ -1979,7 +1979,7 @@ export default function Home() {
 
                     <div className="rounded-2xl bg-white p-3">
                       <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "노미다니약" : "ノミ・ダニ薬"}
+                        {lang === "ko" ? "벼룩,진드기약" : "ノミ・ダニ薬"}
                       </p>
                       <div className="mt-3 grid grid-cols-1 gap-3">
                         <label className="text-xs font-bold text-slate-600">
