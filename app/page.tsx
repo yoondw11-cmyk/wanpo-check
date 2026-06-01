@@ -21,146 +21,175 @@ const breedData = {
   shiba: {
     labelKo: "시바견",
     labelJa: "柴犬",
+    image: "/dogs/shiba.png",
     bg: "from-orange-100 to-amber-200",
   },
   toyPoodle: {
     labelKo: "토이푸들",
     labelJa: "トイプードル",
+    image: "/dogs/toy-poodle.png",
     bg: "from-pink-100 to-rose-200",
   },
   poodle: {
     labelKo: "푸들",
     labelJa: "プードル",
+    image: "/dogs/poodle.png",
     bg: "from-pink-100 to-purple-200",
   },
   chihuahua: {
     labelKo: "치와와",
     labelJa: "チワワ",
+    image: "/dogs/chihuahua.png",
     bg: "from-yellow-100 to-orange-200",
   },
   dachshund: {
     labelKo: "닥스훈트",
     labelJa: "ダックスフンド",
+    image: "/dogs/dachshund.png",
     bg: "from-amber-100 to-yellow-200",
   },
   pomeranian: {
     labelKo: "포메라니안",
     labelJa: "ポメラニアン",
+    image: "/dogs/pomeranian.png",
     bg: "from-orange-100 to-red-200",
   },
   maltese: {
     labelKo: "말티즈",
     labelJa: "マルチーズ",
+    image: "/dogs/maltese.png",
     bg: "from-slate-100 to-blue-100",
   },
   bichon: {
     labelKo: "비숑 프리제",
     labelJa: "ビションフリーゼ",
+    image: "/dogs/bichon.png",
     bg: "from-sky-100 to-slate-200",
   },
   yorkshireTerrier: {
     labelKo: "요크셔테리어",
     labelJa: "ヨークシャーテリア",
+    image: "/dogs/yorkshire-terrier.png",
     bg: "from-yellow-100 to-stone-200",
   },
   miniatureSchnauzer: {
     labelKo: "미니어처 슈나우저",
     labelJa: "ミニチュアシュナウザー",
+    image: "/dogs/miniature-schnauzer.png",
     bg: "from-slate-100 to-zinc-300",
   },
   frenchBulldog: {
     labelKo: "프렌치 불독",
     labelJa: "フレンチブルドッグ",
+    image: "/dogs/french-bulldog.png",
     bg: "from-stone-100 to-orange-200",
   },
   pug: {
     labelKo: "퍼그",
     labelJa: "パグ",
+    image: "/dogs/pug.png",
     bg: "from-yellow-100 to-stone-200",
   },
   corgi: {
     labelKo: "웰시코기",
     labelJa: "ウェルシュコーギー",
+    image: "/dogs/corgi.png",
     bg: "from-orange-100 to-yellow-200",
   },
   goldenRetriever: {
     labelKo: "골든 리트리버",
     labelJa: "ゴールデンレトリバー",
+    image: "/dogs/golden-retriever.png",
     bg: "from-yellow-100 to-amber-300",
   },
   labradorRetriever: {
     labelKo: "래브라도 리트리버",
     labelJa: "ラブラドールレトリバー",
+    image: "/dogs/labrador-retriever.png",
     bg: "from-amber-100 to-lime-200",
   },
   beagle: {
     labelKo: "비글",
     labelJa: "ビーグル",
+    image: "/dogs/beagle.png",
     bg: "from-amber-100 to-orange-200",
   },
   borderCollie: {
     labelKo: "보더콜리",
     labelJa: "ボーダーコリー",
+    image: "/dogs/border-collie.png",
     bg: "from-slate-100 to-blue-200",
   },
   samoyed: {
     labelKo: "사모예드",
     labelJa: "サモエド",
+    image: "/dogs/samoyed.png",
     bg: "from-blue-100 to-slate-100",
   },
   papillon: {
     labelKo: "파피용",
     labelJa: "パピヨン",
+    image: "/dogs/papillon.png",
     bg: "from-purple-100 to-pink-200",
   },
   shihTzu: {
     labelKo: "시츄",
     labelJa: "シーズー",
+    image: "/dogs/shih-tzu.png",
     bg: "from-pink-100 to-yellow-100",
   },
   jackRussellTerrier: {
     labelKo: "잭 러셀 테리어",
     labelJa: "ジャックラッセルテリア",
+    image: "/dogs/jack-russell-terrier.png",
     bg: "from-lime-100 to-yellow-200",
   },
   minPin: {
     labelKo: "미니어처 핀셔",
     labelJa: "ミニチュアピンシャー",
+    image: "/dogs/min-pin.png",
     bg: "from-zinc-100 to-red-100",
   },
   italianGreyhound: {
     labelKo: "이탈리안 그레이하운드",
     labelJa: "イタリアングレーハウンド",
+    image: "/dogs/italian-greyhound.png",
     bg: "from-sky-100 to-indigo-100",
   },
   cavalier: {
     labelKo: "카발리에",
     labelJa: "キャバリア",
+    image: "/dogs/cavalier.png",
     bg: "from-rose-100 to-amber-100",
   },
   sheltie: {
     labelKo: "셰틀랜드 쉽독",
     labelJa: "シェットランドシープドッグ",
+    image: "/dogs/sheltie.png",
     bg: "from-amber-100 to-green-100",
   },
   akita: {
     labelKo: "아키타견",
     labelJa: "秋田犬",
+    image: "/dogs/akita.png",
     bg: "from-orange-100 to-stone-200",
   },
   husky: {
     labelKo: "허스키",
     labelJa: "ハスキー",
+    image: "/dogs/husky.png",
     bg: "from-blue-100 to-slate-200",
   },
   bernese: {
     labelKo: "버니즈 마운틴 독",
     labelJa: "バーニーズマウンテンドッグ",
+    image: "/dogs/bernese.png",
     bg: "from-stone-100 to-emerald-100",
   },
   mixed: {
     labelKo: "믹스견",
     labelJa: "ミックス",
+    image: "/dogs/mixed.png",
     bg: "from-green-100 to-emerald-200",
   },
 };
@@ -791,7 +820,7 @@ export default function Home() {
             <div className="relative z-10 mt-5">
               <p className="mb-2 text-sm font-bold text-slate-700">{t.breed}</p>
 
-              <div className="grid max-h-80 grid-cols-2 gap-3 overflow-y-auto pr-1">
+              <div className="grid max-h-96 grid-cols-2 gap-3 overflow-y-auto pr-1">
                 {Object.entries(breedData).map(([key, breed]) => {
                   const isSelected = breedInput === key;
 
@@ -800,13 +829,27 @@ export default function Home() {
                       key={key}
                       type="button"
                       onClick={() => setBreedInput(key as BreedType)}
-                      className={`rounded-2xl px-3 py-3 text-sm font-bold shadow ${
+                      className={`flex flex-col items-center justify-center rounded-3xl px-3 py-4 text-sm font-bold shadow transition ${
                         isSelected
                           ? "bg-slate-900 text-white"
                           : "bg-white text-slate-700"
                       }`}
                     >
-                      {lang === "ko" ? breed.labelKo : breed.labelJa}
+                      <div
+                        className={`mb-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl ${
+                          isSelected ? "bg-white" : "bg-blue-50"
+                        }`}
+                      >
+                        <img
+                          src={breed.image}
+                          alt={lang === "ko" ? breed.labelKo : breed.labelJa}
+                          className="h-full w-full object-contain p-1"
+                        />
+                      </div>
+
+                      <span className="text-center leading-5">
+                        {lang === "ko" ? breed.labelKo : breed.labelJa}
+                      </span>
                     </button>
                   );
                 })}
@@ -851,9 +894,13 @@ export default function Home() {
 
           <div className="relative z-10 mb-5 rounded-3xl bg-white p-4 shadow">
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-50">
-                <span className="text-sm font-black text-blue-500">DOG</span>
-              </div>
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
+  <img
+    src={breedData[dogProfile.breed].image}
+    alt={lang === "ko" ? breedData[dogProfile.breed].labelKo : breedData[dogProfile.breed].labelJa}
+    className="h-full w-full object-cover"
+  />
+</div>
               <div>
                 <p className="text-sm text-slate-500">
                   {lang === "ko"
