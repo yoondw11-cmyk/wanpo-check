@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const APP_URL = "https://wanpo-check.vercel.app";
+
 const surfaceData = {
   asphalt: { labelKo: "아스팔트", labelJa: "アスファルト", bonus: 10 },
   concrete: { labelKo: "콘크리트", labelJa: "コンクリート", bonus: 6 },
@@ -236,6 +238,26 @@ function getText(lang: Language) {
       lang === "ko"
         ? "강아지 이름을 입력해주세요."
         : "ワンちゃんの名前を入力してください。",
+    cautionTitle:
+      lang === "ko" ? "산책 전 꼭 확인해주세요" : "お散歩前に必ず確認してください",
+    cautionMain:
+      lang === "ko"
+        ? "이 앱의 지면온도는 실제 측정값이 아니라 날씨, 일사량, 바닥 종류를 바탕으로 계산한 추정값입니다."
+        : "このアプリの路面温度は実測値ではなく、天気・日射量・地面の種類をもとにした推定値です。",
+    cautionSub:
+      lang === "ko"
+        ? "산책 전 손등 7초 테스트와 강아지의 호흡, 걸음걸이, 컨디션을 함께 확인해주세요."
+        : "お散歩前には手の甲7秒テストと、ワンちゃんの呼吸・歩き方・体調も一緒に確認してください。",
+    tempGuideTitle:
+      lang === "ko" ? "강아지 산책 지면온도 기준" : "お散歩の路面温度目安",
+    shareTitle: lang === "ko" ? "앱 공유하기" : "アプリを共有する",
+    shareDescription:
+      lang === "ko"
+        ? "여름철 강아지 산책 가능 여부를 날씨와 예상 지면온도로 확인할 수 있는 앱입니다."
+        : "夏のお散歩前に、天気と予想路面温度から安全度を確認できるアプリです。",
+    copyIntro: lang === "ko" ? "소개문 복사" : "紹介文をコピー",
+    shareButton: lang === "ko" ? "공유하기" : "共有する",
+    copied: lang === "ko" ? "복사했어요" : "コピーしました",
   };
 }
 
@@ -423,6 +445,24 @@ function findRecommendedWalkTime(
   };
 }
 
+function getShareText(lang: Language) {
+  if (lang === "ko") {
+    return `강아지 여름 산책 전 지면온도를 확인해보세요.
+
+ワン歩チェック / 산책해도댕?
+날씨, 일사량, 바닥 종류를 바탕으로 예상 지면온도와 추천 산책 시간을 알려주는 앱입니다.
+
+${APP_URL}`;
+  }
+
+  return `夏のお散歩前に、路面温度をチェックしてみてください。
+
+ワン歩チェック
+天気・日射量・地面の種類をもとに、予想路面温度とおすすめのお散歩時間を確認できるアプリです。
+
+${APP_URL}`;
+}
+
 export default function Home() {
   const [lang, setLang] = useState<Language>("ko");
 
@@ -446,6 +486,7 @@ export default function Home() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timer, setTimer] = useState(7);
   const [timerFinished, setTimerFinished] = useState(false);
+  const [copyStatus, setCopyStatus] = useState("");
 
   const t = getText(lang);
 
@@ -547,6 +588,10 @@ export default function Home() {
         groundTemp: estimatedGroundTemp,
       };
     });
+
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+    APP_URL
+  )}`;
 
   useEffect(() => {
     async function fetchWeather(
@@ -671,6 +716,37 @@ export default function Home() {
     setTimer(7);
     setTimerFinished(false);
     setIsTimerRunning(false);
+  }
+
+  async function copyShareText() {
+    const shareText = getShareText(lang);
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopyStatus(t.copied);
+      setTimeout(() => setCopyStatus(""), 2000);
+    } catch {
+      setCopyStatus(lang === "ko" ? "복사에 실패했어요" : "コピーに失敗しました");
+      setTimeout(() => setCopyStatus(""), 2000);
+    }
+  }
+
+  async function shareApp() {
+    const shareText = getShareText(lang);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "ワン歩チェック / 산책해도댕?",
+          text: shareText,
+          url: APP_URL,
+        });
+      } catch {
+        return;
+      }
+    } else {
+      await copyShareText();
+    }
   }
 
   if (!dogProfile) {
@@ -967,6 +1043,87 @@ export default function Home() {
               >
                 {t.timerReset}
               </button>
+            </div>
+          </div>
+
+          <div className="relative z-10 mt-5 rounded-3xl bg-slate-50 p-4 shadow">
+            <p className="text-sm font-black text-slate-700">
+              {t.tempGuideTitle}
+            </p>
+
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between rounded-2xl bg-green-100 px-3 py-2 text-green-800">
+                <span>35℃ 이하</span>
+                <span>산책 가능</span>
+              </div>
+              <div className="flex justify-between rounded-2xl bg-yellow-100 px-3 py-2 text-yellow-800">
+                <span>36–40℃</span>
+                <span>짧게 가능</span>
+              </div>
+              <div className="flex justify-between rounded-2xl bg-orange-100 px-3 py-2 text-orange-800">
+                <span>41–45℃</span>
+                <span>주의 필요</span>
+              </div>
+              <div className="flex justify-between rounded-2xl bg-red-100 px-3 py-2 text-red-700">
+                <span>46–50℃</span>
+                <span>위험</span>
+              </div>
+              <div className="flex justify-between rounded-2xl bg-zinc-200 px-3 py-2 text-zinc-800">
+                <span>50℃ 이상</span>
+                <span>산책 피하기</span>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-xs leading-5 text-slate-600">
+              <p className="font-bold text-slate-700">{t.cautionTitle}</p>
+              <p className="mt-1">{t.cautionMain}</p>
+              <p className="mt-1">{t.cautionSub}</p>
+            </div>
+          </div>
+
+          <div className="relative z-10 mt-5 rounded-3xl bg-white p-4 shadow">
+            <p className="text-sm font-black text-slate-700">{t.shareTitle}</p>
+            <p className="mt-1 text-sm text-slate-500">{t.shareDescription}</p>
+
+            <div className="mt-4 flex flex-col items-center rounded-3xl bg-slate-50 p-4">
+              <img
+                src={qrCodeUrl}
+                alt="QR code"
+                className="h-40 w-40 rounded-2xl bg-white p-2 shadow"
+              />
+              <p className="mt-3 break-all text-center text-xs font-bold text-blue-600">
+                {APP_URL}
+              </p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={copyShareText}
+                className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white shadow"
+              >
+                {t.copyIntro}
+              </button>
+              <button
+                type="button"
+                onClick={shareApp}
+                className="rounded-2xl bg-blue-500 px-4 py-3 text-sm font-black text-white shadow"
+              >
+                {t.shareButton}
+              </button>
+            </div>
+
+            {copyStatus && (
+              <p className="mt-3 text-center text-sm font-bold text-blue-600">
+                {copyStatus}
+              </p>
+            )}
+
+            <div className="mt-4 rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-slate-600">
+              <p className="font-bold text-slate-700">
+                {lang === "ko" ? "공유용 소개문" : "紹介文"}
+              </p>
+              <p className="mt-1 whitespace-pre-line">{getShareText(lang)}</p>
             </div>
           </div>
         </section>
