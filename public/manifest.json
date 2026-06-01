@@ -1,0 +1,11 @@
+{
+  "name": "ワン歩チェック / 산책해도댕?",
+  "short_name": "ワン歩チェック",
+  "description": "날씨와 지면 조건을 바탕으로 강아지 산책 위험도를 확인하는 앱",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#dbeafe",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait"
+}
