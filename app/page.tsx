@@ -204,6 +204,10 @@ type WeatherData = {
   windSpeed: number;
   cloudCover: number;
   radiation: number;
+  uvIndex?: number;
+  airQualityIndex?: number;
+  pm25?: number;
+  pm10?: number;
 };
 
 type HourlyWeather = {
@@ -212,6 +216,36 @@ type HourlyWeather = {
   windSpeed: number;
   cloudCover: number;
   radiation: number;
+  uvIndex?: number;
+  airQualityIndex?: number;
+  pm25?: number;
+  pm10?: number;
+};
+
+type OpenMeteoAirQualityData = {
+  hourly?: {
+    time?: string[];
+    pm10?: Array<number | null>;
+    pm2_5?: Array<number | null>;
+    european_aqi?: Array<number | null>;
+    uv_index?: Array<number | null>;
+  };
+};
+
+const surfaceHeatData: Record<
+  SurfaceType,
+  { storedHeat: number; maxSolarHeat: number }
+> = {
+  asphalt: { storedHeat: 2, maxSolarHeat: 18 },
+  concrete: { storedHeat: 1, maxSolarHeat: 14 },
+  dirt: { storedHeat: 0, maxSolarHeat: 8 },
+  grass: { storedHeat: -1, maxSolarHeat: 4 },
+};
+
+const sunExposureData: Record<SunType, number> = {
+  direct: 1,
+  partial: 0.55,
+  shade: 0.15,
 };
 
 type DogSex = "unknown" | "male" | "female";
@@ -254,8 +288,8 @@ type DogProfile = {
 function getText(lang: Language) {
   return {
     appName: "ワン歩チェック",
-    title: lang === "ko" ? "산책해도댕?" : "お散歩チェック",
-    setupTitle: lang === "ko" ? "산책해도댕?" : "お散歩行けるワン？",
+    title: lang === "ko" ? "산책해도댕?" : "散歩行けるワン？",
+    setupTitle: lang === "ko" ? "산책해도댕?" : "散歩行けるワン？",
     setupSubtitle:
       lang === "ko"
         ? "먼저 우리 강아지 정보를 등록해볼게요."
@@ -267,7 +301,7 @@ function getText(lang: Language) {
     languageButton: lang === "ko" ? "日本語" : "한국어",
     todayCheck: lang === "ko" ? "오늘의 산책 체크" : "今日のお散歩チェック",
     nowWalkQuestion:
-      lang === "ko" ? "는 지금 산책해도댕?" : "、今お散歩行ける？",
+      lang === "ko" ? "는 지금 산책해도댕?" : "、今お散歩行けるワン？",
     resetProfile:
       lang === "ko" ? "강아지 정보 다시 설정" : "ワンちゃん情報を再設定",
     locationWeather: lang === "ko" ? "현재 위치/날씨" : "現在地/天気",
@@ -275,6 +309,9 @@ function getText(lang: Language) {
     wind: lang === "ko" ? "풍속" : "風速",
     cloud: lang === "ko" ? "구름" : "雲量",
     radiation: lang === "ko" ? "일사량" : "日射量",
+    uvIndex: lang === "ko" ? "자외선" : "UV指数",
+    airQuality: lang === "ko" ? "대기질" : "空気質",
+    pm25: lang === "ko" ? "초미세먼지" : "PM2.5",
     groundTemp: lang === "ko" ? "예상 지면온도" : "予想路面温度",
     surface: lang === "ko" ? "바닥 종류" : "地面の種類",
     sun: lang === "ko" ? "햇빛 상태" : "日差し",
@@ -311,6 +348,10 @@ function getText(lang: Language) {
         : "お散歩前には手の甲7秒テストと、ワンちゃんの呼吸・歩き方・体調も一緒に確認してください。",
     tempGuideTitle:
       lang === "ko" ? "강아지 산책 지면온도 기준" : "お散歩の路面温度目安",
+    guideSourceNote:
+      lang === "ko"
+        ? "참고: 수의사 및 동물보호단체의 고온 포장도로 주의 권장사항과 손등 7초 테스트를 바탕으로 한 앱용 참고 기준입니다."
+        : "参考：獣医師・動物保護団体が案内する高温の舗装路への注意喚起と「手の甲7秒テスト」をもとにしたアプリ用の目安です。",
     shareTitle: lang === "ko" ? "앱 공유하기" : "アプリを共有する",
     shareDescription:
       lang === "ko"
@@ -322,31 +363,95 @@ function getText(lang: Language) {
   };
 }
 
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function calculateGroundTemperature(
   airTemperature: number,
   surface: SurfaceType,
   sun: SunType,
   weather: WeatherData | HourlyWeather | null
 ) {
-  const surfaceBonus = surfaceData[surface].bonus;
-  const sunBonus = sunData[sun].bonus;
+  const surfaceHeat = surfaceHeatData[surface];
+  const sunExposure = sunExposureData[sun];
 
-  const windPenalty = weather
-    ? Math.min(Math.round(weather.windSpeed / 2), 4)
-    : 0;
-  const cloudPenalty = weather ? Math.round(weather.cloudCover / 20) : 0;
-  const radiationBonus = weather
-    ? Math.min(Math.round(weather.radiation / 120), 8)
-    : 0;
+  const radiation = weather ? clampNumber(weather.radiation, 0, 900) : 0;
+  const radiationFactor = radiation / 900;
+  const cloudCover = weather ? clampNumber(weather.cloudCover, 0, 100) : 0;
+  const windSpeed = weather ? Math.max(weather.windSpeed, 0) : 0;
+  const uvIndex = weather?.uvIndex ?? 0;
+
+  const solarHeating =
+    surfaceHeat.maxSolarHeat * radiationFactor * sunExposure;
+  const uvHeating =
+    Math.min(uvIndex * 0.45, 4) * radiationFactor * sunExposure;
+  const cloudCooling = (cloudCover / 100) * 4 * sunExposure;
+  const windCooling = Math.min(windSpeed * 0.25, 5);
 
   return Math.round(
     airTemperature +
-      surfaceBonus +
-      sunBonus +
-      radiationBonus -
-      windPenalty -
-      cloudPenalty
+      surfaceHeat.storedHeat +
+      solarHeating +
+      uvHeating -
+      cloudCooling -
+      windCooling
   );
+}
+
+function getAirQualityValues(
+  airQualityData: OpenMeteoAirQualityData | null,
+  time: string
+) {
+  const times = airQualityData?.hourly?.time;
+
+  if (!times) {
+    return {};
+  }
+
+  const index = times.indexOf(time);
+
+  if (index < 0) {
+    return {};
+  }
+
+  const uvIndex = airQualityData.hourly?.uv_index?.[index];
+  const airQualityIndex = airQualityData.hourly?.european_aqi?.[index];
+  const pm25 = airQualityData.hourly?.pm2_5?.[index];
+  const pm10 = airQualityData.hourly?.pm10?.[index];
+
+  return {
+    uvIndex: typeof uvIndex === "number" ? Math.round(uvIndex * 10) / 10 : undefined,
+    airQualityIndex:
+      typeof airQualityIndex === "number" ? Math.round(airQualityIndex) : undefined,
+    pm25: typeof pm25 === "number" ? Math.round(pm25) : undefined,
+    pm10: typeof pm10 === "number" ? Math.round(pm10) : undefined,
+  };
+}
+
+function getAirQualityLabel(value: number | undefined, lang: Language) {
+  if (value === undefined) {
+    return "-";
+  }
+
+  if (value <= 20) return lang === "ko" ? "좋음" : "良い";
+  if (value <= 40) return lang === "ko" ? "보통" : "普通";
+  if (value <= 60) return lang === "ko" ? "주의" : "注意";
+  if (value <= 80) return lang === "ko" ? "나쁨" : "悪い";
+  if (value <= 100) return lang === "ko" ? "매우 나쁨" : "非常に悪い";
+  return lang === "ko" ? "위험" : "危険";
+}
+
+function getUvLabel(value: number | undefined, lang: Language) {
+  if (value === undefined) {
+    return "-";
+  }
+
+  if (value < 3) return lang === "ko" ? "낮음" : "低い";
+  if (value < 6) return lang === "ko" ? "보통" : "中程度";
+  if (value < 8) return lang === "ko" ? "높음" : "高い";
+  if (value < 11) return lang === "ko" ? "매우 높음" : "非常に高い";
+  return lang === "ko" ? "위험" : "危険";
 }
 
 function getRiskMessage(temp: number, lang: Language) {
@@ -518,7 +623,7 @@ ${APP_URL}`;
 
   return `夏のお散歩前に、路面温度をチェックしてみてください。
 
-ワン歩チェック
+ワン歩チェック / 散歩行けるワン？
 天気・日射量・地面の種類をもとに、予想路面温度とおすすめのお散歩時間を確認できるアプリです。
 
 ${APP_URL}`;
@@ -908,9 +1013,11 @@ export default function Home() {
       currentLongitude: number
     ) {
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentLatitude}&longitude=${currentLongitude}&current=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&hourly=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&forecast_days=2&timezone=auto`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${currentLatitude}&longitude=${currentLongitude}&current=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&hourly=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&forecast_days=2&timezone=auto`;
 
-        const response = await fetch(url);
+        const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${currentLatitude}&longitude=${currentLongitude}&hourly=pm10,pm2_5,european_aqi,uv_index&forecast_days=2&timezone=auto`;
+
+        const response = await fetch(weatherUrl);
 
         if (!response.ok) {
           throw new Error("날씨 API 호출 실패");
@@ -918,21 +1025,50 @@ export default function Home() {
 
         const data = await response.json();
 
+        let airQualityData: OpenMeteoAirQualityData | null = null;
+
+        try {
+          const airQualityResponse = await fetch(airQualityUrl);
+
+          if (airQualityResponse.ok) {
+            airQualityData = await airQualityResponse.json();
+          }
+        } catch (error) {
+          console.error("대기질 API 호출 실패", error);
+        }
+
+        const currentAirQuality = getAirQualityValues(
+          airQualityData,
+          data.current.time
+        );
+
         setWeather({
           temperature: Math.round(data.current.temperature_2m),
           windSpeed: Math.round(data.current.wind_speed_10m),
           cloudCover: Math.round(data.current.cloud_cover),
           radiation: Math.round(data.current.shortwave_radiation),
+          uvIndex: currentAirQuality.uvIndex,
+          airQualityIndex: currentAirQuality.airQualityIndex,
+          pm25: currentAirQuality.pm25,
+          pm10: currentAirQuality.pm10,
         });
 
         const hourly: HourlyWeather[] = data.hourly.time.map(
-          (time: string, index: number) => ({
-            time,
-            temperature: Math.round(data.hourly.temperature_2m[index]),
-            windSpeed: Math.round(data.hourly.wind_speed_10m[index]),
-            cloudCover: Math.round(data.hourly.cloud_cover[index]),
-            radiation: Math.round(data.hourly.shortwave_radiation[index]),
-          })
+          (time: string, index: number) => {
+            const hourlyAirQuality = getAirQualityValues(airQualityData, time);
+
+            return {
+              time,
+              temperature: Math.round(data.hourly.temperature_2m[index]),
+              windSpeed: Math.round(data.hourly.wind_speed_10m[index]),
+              cloudCover: Math.round(data.hourly.cloud_cover[index]),
+              radiation: Math.round(data.hourly.shortwave_radiation[index]),
+              uvIndex: hourlyAirQuality.uvIndex,
+              airQualityIndex: hourlyAirQuality.airQualityIndex,
+              pm25: hourlyAirQuality.pm25,
+              pm10: hourlyAirQuality.pm10,
+            };
+          }
         );
 
         setHourlyWeather(hourly);
@@ -1349,7 +1485,7 @@ export default function Home() {
               </p>
               <p className="mt-1">
                 {lang === "ko"
-                  ? "생일, 체중, 예방접종, 심장사상충약, 노미다니약 기록은 앱 안의 ‘건강 정보 관리’에서 추가할 수 있어요."
+                  ? "생일, 체중, 예방접종, 심장사상충약, 벼룩·진드기약 기록은 앱 안의 ‘건강 정보 관리’에서 추가할 수 있어요."
                   : "誕生日、体重、ワクチン、フィラリア薬、ノミ・ダニ薬の記録はアプリ内の「健康情報管理」から追加できます。"}
               </p>
             </div>
@@ -1465,13 +1601,13 @@ export default function Home() {
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-slate-500">
                     {lang === "ko"
                       ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
                       : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
                   </p>
-                  <p className="text-xl font-black">
+                  <p className="whitespace-nowrap text-lg font-black">
                     {dogProfile.name}
                     {t.nowWalkQuestion}
                   </p>
@@ -1621,7 +1757,7 @@ export default function Home() {
 
                   <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
                     <span className="font-bold">
-                      {lang === "ko" ? "노미다니약 다음" : "ノミ・ダニ薬 次回"}
+                      {lang === "ko" ? "벼룩, 진드기약 다음" : "ノミ・ダニ薬 次回"}
                     </span>
                     <span
                       className={`rounded-full px-2 py-1 font-black ${
@@ -1651,7 +1787,7 @@ export default function Home() {
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     {lang === "ko"
-                      ? "개인 정보, 예방접종, 심장사상충약/노미다니약 기록을 저장할 수 있어요."
+                      ? "개인 정보, 예방접종, 심장사상충약/벼룩·진드기약 기록을 저장할 수 있어요."
                       : "基本情報、ワクチン、フィラリア薬・ノミダニ薬の記録を保存できます。"}
                   </p>
                 </div>
@@ -1931,7 +2067,7 @@ export default function Home() {
                 <div className="rounded-3xl bg-amber-50 p-4">
                   <p className="mb-3 text-sm font-black text-slate-700">
                     {lang === "ko"
-                      ? "7. 심장사상충약 / 노미다니약 기록"
+                      ? "7. 심장사상충약 / 벼룩, 진드기약 기록"
                       : "7. フィラリア薬・ノミダニ薬記録"}
                   </p>
 
@@ -1979,7 +2115,7 @@ export default function Home() {
 
                     <div className="rounded-2xl bg-white p-3">
                       <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "벼룩,진드기약" : "ノミ・ダニ薬"}
+                        {lang === "ko" ? "벼룩, 진드기약" : "ノミ・ダニ薬"}
                       </p>
                       <div className="mt-3 grid grid-cols-1 gap-3">
                         <label className="text-xs font-bold text-slate-600">
@@ -2092,6 +2228,28 @@ export default function Home() {
                 <div className="rounded-xl bg-white p-2">
                   <p className="font-bold">{t.radiation}</p>
                   <p>{weather.radiation} W/m²</p>
+                </div>
+                <div className="rounded-xl bg-white p-2">
+                  <p className="font-bold">{t.uvIndex}</p>
+                  <p>
+                    {weather.uvIndex !== undefined
+                      ? `${weather.uvIndex} · ${getUvLabel(weather.uvIndex, lang)}`
+                      : "-"}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white p-2">
+                  <p className="font-bold">{t.airQuality}</p>
+                  <p>
+                    {weather.airQualityIndex !== undefined
+                      ? `${getAirQualityLabel(weather.airQualityIndex, lang)}`
+                      : "-"}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white p-2">
+                  <p className="font-bold">{t.pm25}</p>
+                  <p>
+                    {weather.pm25 !== undefined ? `${weather.pm25} µg/m³` : "-"}
+                  </p>
                 </div>
               </div>
             )}
@@ -2235,26 +2393,30 @@ export default function Home() {
 
             <div className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between rounded-2xl bg-green-100 px-3 py-2 text-green-800">
-                <span>35℃ 이하</span>
-                <span>산책 가능</span>
+                <span>{lang === "ko" ? "35℃ 이하" : "35℃以下"}</span>
+                <span>{lang === "ko" ? "산책 가능" : "お散歩可能"}</span>
               </div>
               <div className="flex justify-between rounded-2xl bg-yellow-100 px-3 py-2 text-yellow-800">
                 <span>36–40℃</span>
-                <span>짧게 가능</span>
+                <span>{lang === "ko" ? "짧게 가능" : "短めなら可能"}</span>
               </div>
               <div className="flex justify-between rounded-2xl bg-orange-100 px-3 py-2 text-orange-800">
                 <span>41–45℃</span>
-                <span>주의 필요</span>
+                <span>{lang === "ko" ? "주의 필요" : "注意が必要"}</span>
               </div>
               <div className="flex justify-between rounded-2xl bg-red-100 px-3 py-2 text-red-700">
                 <span>46–50℃</span>
-                <span>위험</span>
+                <span>{lang === "ko" ? "위험" : "危険"}</span>
               </div>
               <div className="flex justify-between rounded-2xl bg-zinc-200 px-3 py-2 text-zinc-800">
-                <span>50℃ 이상</span>
-                <span>산책 피하기</span>
+                <span>{lang === "ko" ? "50℃ 이상" : "50℃以上"}</span>
+                <span>{lang === "ko" ? "산책 피하기" : "お散歩を避ける"}</span>
               </div>
             </div>
+
+            <p className="mt-3 text-[11px] leading-5 text-slate-500">
+              {t.guideSourceNote}
+            </p>
 
             <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-xs leading-5 text-slate-600">
               <p className="font-bold text-slate-700">{t.cautionTitle}</p>
