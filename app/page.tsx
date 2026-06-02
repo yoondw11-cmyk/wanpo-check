@@ -1754,7 +1754,7 @@ export default function Home() {
           .sort((a: DogFriendlySpot, b: DogFriendlySpot) => a.distanceKm - b.distanceKm);
 
         const uniqueMap = new Map<string, DogFriendlySpot>();
-        mapped.forEach((spot) => {
+        mapped.forEach((spot: DogFriendlySpot) => {
           const key = `${spot.kindLabel}-${spot.name}`;
           if (!uniqueMap.has(key)) {
             uniqueMap.set(key, spot);
