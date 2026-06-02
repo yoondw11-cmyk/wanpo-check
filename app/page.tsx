@@ -7,7 +7,7 @@ const APP_URL = "https://wanpo-check.vercel.app";
 const surfaceData = {
   asphalt: { labelKo: "아스팔트", labelJa: "アスファルト", bonus: 10 },
   concrete: { labelKo: "콘크리트", labelJa: "コンクリート", bonus: 6 },
-  dirt: { labelKo: "흙길", labelJa: "土の道", bonus: 3 },
+  pavingBlock: { labelKo: "보도블럭", labelJa: "歩道ブロック", bonus: 5 },
   grass: { labelKo: "잔디", labelJa: "芝生", bonus: 1 },
 };
 
@@ -204,6 +204,7 @@ type WeatherData = {
   windSpeed: number;
   cloudCover: number;
   radiation: number;
+  recentSunFactor?: number;
   uvIndex?: number;
   airQualityIndex?: number;
   pm25?: number;
@@ -216,6 +217,7 @@ type HourlyWeather = {
   windSpeed: number;
   cloudCover: number;
   radiation: number;
+  recentSunFactor?: number;
   uvIndex?: number;
   airQualityIndex?: number;
   pm25?: number;
@@ -275,12 +277,12 @@ type DogFriendlySpot = {
 
 const surfaceHeatData: Record<
   SurfaceType,
-  { storedHeat: number; maxSolarHeat: number }
+  { storedHeat: number; maxSolarHeat: number; thermalMemoryHeat: number }
 > = {
-  asphalt: { storedHeat: 2, maxSolarHeat: 18 },
-  concrete: { storedHeat: 1, maxSolarHeat: 14 },
-  dirt: { storedHeat: 0, maxSolarHeat: 8 },
-  grass: { storedHeat: -1, maxSolarHeat: 4 },
+  asphalt: { storedHeat: 2, maxSolarHeat: 18, thermalMemoryHeat: 8 },
+  concrete: { storedHeat: 1, maxSolarHeat: 14, thermalMemoryHeat: 6 },
+  pavingBlock: { storedHeat: 1, maxSolarHeat: 12, thermalMemoryHeat: 5 },
+  grass: { storedHeat: -1, maxSolarHeat: 4, thermalMemoryHeat: 1.5 },
 };
 
 const sunExposureData: Record<SunType, number> = {
@@ -408,6 +410,51 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function findNearestTimeIndex(times: string[], targetTime: string) {
+  const target = new Date(targetTime).getTime();
+
+  if (Number.isNaN(target)) {
+    return -1;
+  }
+
+  let nearestIndex = -1;
+  let nearestDiff = Number.POSITIVE_INFINITY;
+
+  times.forEach((timeText, index) => {
+    const time = new Date(timeText).getTime();
+
+    if (Number.isNaN(time)) return;
+
+    const diff = Math.abs(time - target);
+
+    if (diff < nearestDiff) {
+      nearestDiff = diff;
+      nearestIndex = index;
+    }
+  });
+
+  return nearestIndex;
+}
+
+function calculateRecentSunFactor(
+  radiations: Array<number | null | undefined>,
+  targetIndex: number
+) {
+  if (targetIndex < 0) {
+    return 0;
+  }
+
+  // 현재 시간과 직전 3시간의 일사량을 가중 평균합니다.
+  // 해가 진 뒤에도 직전 햇빛의 잔열이 서서히 빠지도록 하기 위한 계수입니다.
+  const weights = [0.4, 0.3, 0.2, 0.1];
+
+  return weights.reduce((total, weight, offset) => {
+    const index = targetIndex - offset;
+    const radiation = index >= 0 ? radiations[index] ?? 0 : 0;
+    return total + clampNumber(radiation, 0, 900) / 900 * weight;
+  }, 0);
+}
+
 function calculateGroundTemperature(
   airTemperature: number,
   surface: SurfaceType,
@@ -421,27 +468,38 @@ function calculateGroundTemperature(
   const cloudCover = weather ? clampNumber(weather.cloudCover, 0, 100) : 0;
   const windSpeed = weather ? Math.max(weather.windSpeed, 0) : 0;
   const uvIndex = weather?.uvIndex ?? 0;
+  const recentSunFactor = clampNumber(weather?.recentSunFactor ?? radiationFactor, 0, 1);
 
-  // 실제 일사량(shortwave radiation)을 중심으로 계산합니다.
-  // 기존 계산식은 구름 냉각값이 햇빛상태와 함께 커져서,
-  // 직사광선이 그늘보다 낮게 나오는 역전 현상이 생길 수 있었습니다.
-  const cloudDamping = 1 - (cloudCover / 100) * 0.25;
+  // 기본 온도: 공기 온도 + 바닥 자체 저장열 - 바람에 의한 표면 냉각
   const windCooling = Math.min(windSpeed * 0.18, 3.5);
   const baseTemperature =
     airTemperature + surfaceHeat.storedHeat - windCooling;
 
+  // 구름은 현재 햇빛 가열을 약하게 만들지만, 직사광선/그늘 순서를 뒤집지 않도록 제한합니다.
+  const cloudDamping = 1 - (cloudCover / 100) * 0.35;
+
   const calculateByExposure = (exposure: number, shadeCooling: number) => {
-    const solarHeating =
+    const currentSolarHeating =
       surfaceHeat.maxSolarHeat * radiationFactor * cloudDamping * exposure;
     const uvHeating =
-      Math.min(uvIndex * 0.3, 3) * radiationFactor * cloudDamping * exposure;
+      Math.min(uvIndex * 0.25, 2.5) * radiationFactor * cloudDamping * exposure;
+
+    // 직전 몇 시간 햇빛 누적에 의한 바닥 잔열.
+    // 현재 일사량이 0에 가까운 해질녘에도, 이전 햇빛이 강했다면 천천히 식도록 반영합니다.
+    const exposureMemory = 0.35 + exposure * 0.65;
+    const storedSolarHeating =
+      surfaceHeat.thermalMemoryHeat * recentSunFactor * exposureMemory;
 
     return Math.round(
-      baseTemperature + solarHeating + uvHeating - shadeCooling
+      baseTemperature +
+        currentSolarHeating +
+        uvHeating +
+        storedSolarHeating -
+        shadeCooling
     );
   };
 
-  const shadeTemperature = calculateByExposure(0.05, 0.8);
+  const shadeTemperature = calculateByExposure(0.08, 0.8);
   const partialTemperature = Math.max(
     shadeTemperature,
     calculateByExposure(0.45, 0.3)
@@ -455,7 +513,6 @@ function calculateGroundTemperature(
   if (sun === "partial") return partialTemperature;
   return shadeTemperature;
 }
-
 function getAirQualityValues(
   airQualityData: OpenMeteoAirQualityData | null,
   time: string
@@ -1085,6 +1142,66 @@ function getGroundTemperatureDisplayClass(temp: number) {
   return "text-zinc-800";
 }
 
+function getHeatStressMessage(
+  weather: WeatherData | null,
+  airTemperature: number,
+  groundTemperature: number,
+  lang: Language
+) {
+  const radiation = weather?.radiation ?? 0;
+  const uvIndex = weather?.uvIndex ?? 0;
+  const windSpeed = weather?.windSpeed ?? 0;
+
+  // 습도는 아직 포함하지 않은 간이 더위 스트레스 지표입니다.
+  const stressScore =
+    airTemperature +
+    Math.min(radiation / 120, 7) +
+    Math.min(uvIndex * 0.7, 5) -
+    Math.min(windSpeed * 0.15, 3);
+
+  if (airTemperature >= 32 || groundTemperature >= 46 || stressScore >= 35) {
+    return {
+      label: lang === "ko" ? "더위 스트레스 위험" : "暑さストレス危険",
+      className: "bg-red-100 text-red-700",
+      detail:
+        lang === "ko"
+          ? "열사병·탈수 위험이 커요. 가능하면 산책을 미루고 물과 그늘을 우선해주세요."
+          : "熱中症・脱水リスクが高めです。できれば散歩を避け、水分と日陰を優先してください。",
+    };
+  }
+
+  if (airTemperature >= 28 || groundTemperature >= 41 || stressScore >= 30) {
+    return {
+      label: lang === "ko" ? "더위 스트레스 주의" : "暑さストレス注意",
+      className: "bg-amber-100 text-amber-700",
+      detail:
+        lang === "ko"
+          ? "짧게 산책하고, 헐떡임·침흘림·걸음 둔화를 확인해주세요."
+          : "短めにして、パンティング・よだれ・歩き方の変化を確認しましょう。",
+    };
+  }
+
+  if (airTemperature >= 24 || uvIndex >= 3 || radiation >= 450) {
+    return {
+      label: lang === "ko" ? "더위 스트레스 확인" : "暑さストレス確認",
+      className: "bg-yellow-100 text-yellow-700",
+      detail:
+        lang === "ko"
+          ? "대체로 가능하지만 물, 휴식, 그늘을 챙기면 더 안전해요."
+          : "基本的には可能ですが、水分・休憩・日陰があると安心です。",
+    };
+  }
+
+  return {
+    label: lang === "ko" ? "더위 스트레스 낮음" : "暑さストレス低め",
+    className: "bg-green-100 text-green-700",
+    detail:
+      lang === "ko"
+        ? "열사병 위험은 낮은 편이에요. 그래도 강아지 상태는 계속 봐주세요."
+        : "熱中症リスクは低めです。ワンちゃんの様子は確認してください。",
+  };
+}
+
 function formatHour(timeText: string) {
   const date = new Date(timeText);
 
@@ -1590,6 +1707,7 @@ export default function Home() {
   const currentSurface = surfaceData[selectedSurface];
   const currentSun = sunData[selectedSun];
   const risk = getRiskMessage(groundTemperature, lang);
+  const heatStress = getHeatStressMessage(weather, airTemperature, groundTemperature, lang);
   const groundTemperatureDisplayClass = getGroundTemperatureDisplayClass(groundTemperature);
 
   const recommendedWalkTime =
@@ -1670,7 +1788,7 @@ export default function Home() {
       currentLongitude: number
     ) {
       try {
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${currentLatitude}&longitude=${currentLongitude}&current=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&hourly=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&forecast_days=2&timezone=auto`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${currentLatitude}&longitude=${currentLongitude}&current=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&hourly=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&past_days=1&forecast_days=2&timezone=auto`;
 
         const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${currentLatitude}&longitude=${currentLongitude}&hourly=pm10,pm2_5,european_aqi,uv_index&forecast_days=2&timezone=auto`;
 
@@ -1699,11 +1817,20 @@ export default function Home() {
           data.current.time
         );
 
+        const hourlyTimes: string[] = data.hourly.time;
+        const hourlyRadiations: Array<number | null> = data.hourly.shortwave_radiation;
+        const currentWeatherIndex = findNearestTimeIndex(hourlyTimes, data.current.time);
+        const currentRecentSunFactor = calculateRecentSunFactor(
+          hourlyRadiations,
+          currentWeatherIndex
+        );
+
         setWeather({
           temperature: Math.round(data.current.temperature_2m),
           windSpeed: Math.round(data.current.wind_speed_10m),
           cloudCover: Math.round(data.current.cloud_cover),
           radiation: Math.round(data.current.shortwave_radiation),
+          recentSunFactor: currentRecentSunFactor,
           uvIndex: currentAirQuality.uvIndex,
           airQualityIndex: currentAirQuality.airQualityIndex,
           pm25: currentAirQuality.pm25,
@@ -1720,6 +1847,7 @@ export default function Home() {
               windSpeed: Math.round(data.hourly.wind_speed_10m[index]),
               cloudCover: Math.round(data.hourly.cloud_cover[index]),
               radiation: Math.round(data.hourly.shortwave_radiation[index]),
+              recentSunFactor: calculateRecentSunFactor(hourlyRadiations, index),
               uvIndex: hourlyAirQuality.uvIndex,
               airQualityIndex: hourlyAirQuality.airQualityIndex,
               pm25: hourlyAirQuality.pm25,
@@ -2474,6 +2602,11 @@ export default function Home() {
                   <p className={`mt-3 rounded-full px-4 py-3 text-center text-base font-black shadow-sm ${risk.className}`}>
                     {risk.label}
                   </p>
+
+                  <div className={`mt-2 rounded-2xl px-3 py-2 text-xs leading-4 ${heatStress.className}`}>
+                    <p className="font-black">{heatStress.label}</p>
+                    <p className="mt-0.5 font-semibold">{heatStress.detail}</p>
+                  </div>
                 </div>
 
                 <div className="grid shrink-0 grid-cols-2 gap-2">
