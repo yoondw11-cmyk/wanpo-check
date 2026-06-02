@@ -232,6 +232,47 @@ type OpenMeteoAirQualityData = {
   };
 };
 
+
+type VetClinic = {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  address: string;
+  phone: string;
+  openingHours: string;
+  distanceKm: number;
+  serviceLabel: string;
+  serviceClassName: string;
+  note: string;
+  mapUrl: string;
+  directionsUrl: string;
+  infoUrl: string;
+  phoneUrl: string | null;
+};
+
+type FavoriteVet = {
+  name: string;
+  phone: string;
+  address: string;
+  openingHours: string;
+  memo: string;
+};
+
+
+type DogFriendlySpot = {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  distanceKm: number;
+  kindLabel: string;
+  kindClassName: string;
+  note: string;
+  mapUrl: string;
+  directionsUrl: string;
+};
+
 const surfaceHeatData: Record<
   SurfaceType,
   { storedHeat: number; maxSolarHeat: number }
@@ -405,11 +446,34 @@ function getAirQualityValues(
 ) {
   const times = airQualityData?.hourly?.time;
 
-  if (!times) {
+  if (!times || times.length === 0) {
     return {};
   }
 
-  const index = times.indexOf(time);
+  const targetTime = new Date(time).getTime();
+  let index = times.indexOf(time);
+
+  if (index < 0 && !Number.isNaN(targetTime)) {
+    let nearestIndex = -1;
+    let nearestDiff = Number.POSITIVE_INFINITY;
+
+    times.forEach((itemTime, itemIndex) => {
+      const itemDateTime = new Date(itemTime).getTime();
+
+      if (Number.isNaN(itemDateTime)) return;
+
+      const diff = Math.abs(itemDateTime - targetTime);
+
+      if (diff < nearestDiff) {
+        nearestDiff = diff;
+        nearestIndex = itemIndex;
+      }
+    });
+
+    if (nearestIndex >= 0 && nearestDiff <= 1000 * 60 * 90) {
+      index = nearestIndex;
+    }
+  }
 
   if (index < 0) {
     return {};
@@ -463,6 +527,436 @@ function getPm25Label(value: number | undefined, lang: Language) {
   if (value <= 35) return lang === "ko" ? "보통" : "普通";
   if (value <= 55) return lang === "ko" ? "높음" : "高い";
   return lang === "ko" ? "매우 높음" : "非常に高い";
+}
+
+
+function calculateDistanceKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
+function getVetAddress(tags: Record<string, string>) {
+  const parts = [
+    tags["addr:postcode"],
+    tags["addr:state"],
+    tags["addr:city"],
+    tags["addr:suburb"],
+    tags["addr:street"],
+    tags["addr:housenumber"],
+  ].filter(Boolean);
+
+  return parts.join(" ");
+}
+
+function getVetServiceInfo(
+  tags: Record<string, string>,
+  lang: Language
+): Pick<VetClinic, "serviceLabel" | "serviceClassName" | "note"> {
+  const openingHours = (tags.opening_hours || "").toLowerCase();
+  const name = (tags.name || "").toLowerCase();
+  const description = (tags.description || "").toLowerCase();
+  const operator = (tags.operator || "").toLowerCase();
+  const combinedText = `${name} ${description} ${operator}`;
+
+  const hasStrictTwentyFourHourMark =
+    openingHours.includes("24/7") ||
+    openingHours.includes("24 hours") ||
+    openingHours.includes("24h") ||
+    combinedText.includes("24h") ||
+    combinedText.includes("24時間") ||
+    combinedText.includes("24時") ||
+    combinedText.includes("24시간");
+
+  if (hasStrictTwentyFourHourMark) {
+    return {
+      serviceLabel: lang === "ko" ? "24시간 표시 후보" : "24時間表示あり",
+      serviceClassName: "bg-green-100 text-green-700",
+      note:
+        lang === "ko"
+          ? "공개 지도 데이터에 24시간 표시가 있는 후보예요. 실제 진료 가능 여부는 정보확인에서 반드시 확인해주세요."
+          : "公開地図データに24時間表示がある候補です。実際の診療可否は情報確認で必ずご確認ください。",
+    };
+  }
+
+  return {
+    serviceLabel: lang === "ko" ? "제외" : "除外",
+    serviceClassName: "bg-slate-100 text-slate-700",
+    note:
+      lang === "ko"
+        ? "24시간 표시가 없어 목록에서 제외되는 병원입니다."
+        : "24時間表示がないため一覧から除外されます。",
+  };
+}
+
+function normalizeVetClinic(
+  item: any,
+  userLat: number,
+  userLon: number,
+  lang: Language
+): VetClinic | null {
+  const lat = item.lat ?? item.center?.lat;
+  const lon = item.lon ?? item.center?.lon;
+  const tags = item.tags ?? {};
+
+  if (typeof lat !== "number" || typeof lon !== "number") {
+    return null;
+  }
+
+  const name =
+    tags.name ||
+    (lang === "ko" ? "이름 미확인 동물병원" : "名称未確認の動物病院");
+  const address = getVetAddress(tags) || (lang === "ko" ? "주소 정보 없음" : "住所情報なし");
+  const phone =
+    tags.phone || tags["contact:phone"] || tags["contact:mobile"] || "";
+  const openingHours =
+    tags.opening_hours ||
+    (lang === "ko" ? "영업시간 정보 없음" : "診療時間情報なし");
+  const serviceInfo = getVetServiceInfo(tags, lang);
+  const distanceKm = calculateDistanceKm(userLat, userLon, lat, lon);
+
+  return {
+    id: String(item.id),
+    name,
+    lat,
+    lon,
+    address,
+    phone,
+    openingHours,
+    distanceKm,
+    serviceLabel: serviceInfo.serviceLabel,
+    serviceClassName: serviceInfo.serviceClassName,
+    note: serviceInfo.note,
+    mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name} ${lat},${lon}`)}`,
+    directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
+    infoUrl: `https://www.google.com/search?q=${encodeURIComponent(`${name} 動物病院 24時間 住所 電話番号 営業時間`)}`,
+    phoneUrl: phone ? `tel:${phone.replace(/[^+\d]/g, "")}` : null,
+  };
+}
+
+function formatDistanceText(distanceKm: number, lang: Language) {
+  if (distanceKm < 1) {
+    const meters = Math.round(distanceKm * 1000);
+    return lang === "ko" ? `${meters}m` : `${meters}m`;
+  }
+
+  return `${distanceKm.toFixed(1)}km`;
+}
+
+
+function normalizeDogFriendlySpot(
+  item: any,
+  userLat: number,
+  userLon: number,
+  lang: Language
+): DogFriendlySpot | null {
+  const lat = item.lat ?? item.center?.lat;
+  const lon = item.lon ?? item.center?.lon;
+  const tags = item.tags ?? {};
+
+  if (typeof lat !== "number" || typeof lon !== "number") {
+    return null;
+  }
+
+  const leisure = tags.leisure || "";
+  const highway = tags.highway || "";
+  const waterway = tags.waterway || "";
+  const natural = tags.natural || "";
+  const landuse = tags.landuse || "";
+
+  let kindLabel = lang === "ko" ? "산책 장소" : "お散歩スポット";
+  let kindClassName = "bg-slate-100 text-slate-700";
+  let note =
+    lang === "ko"
+      ? "공개 지도 데이터 기반 산책 장소예요."
+      : "公開地図データにもとづく散歩スポットです。";
+  let fallbackName = lang === "ko" ? "이름 없는 산책 장소" : "名前未登録の散歩スポット";
+
+  if (leisure === "dog_park") {
+    kindLabel = lang === "ko" ? "도그 파크" : "ドッグパーク";
+    kindClassName = "bg-blue-100 text-blue-700";
+    note =
+      lang === "ko"
+        ? "강아지가 쉬거나 뛰놀기 좋은 도그 파크예요."
+        : "ワンちゃんが遊びやすいドッグパークです。";
+    fallbackName = lang === "ko" ? "근처 도그 파크" : "近くのドッグパーク";
+  } else if (leisure === "park") {
+    kindLabel = lang === "ko" ? "공원" : "公園";
+    kindClassName = "bg-green-100 text-green-700";
+    note =
+      lang === "ko"
+        ? "가볍게 산책하기 좋은 근처 공원이에요."
+        : "気軽に散歩しやすい近くの公園です。";
+    fallbackName = lang === "ko" ? "근처 공원" : "近くの公園";
+  } else if (highway === "footway" || highway === "path" || highway === "pedestrian") {
+    kindLabel = lang === "ko" ? "산책로" : "散歩道";
+    kindClassName = "bg-amber-100 text-amber-700";
+    note =
+      lang === "ko"
+        ? "걷기 좋은 길로 표시된 산책로예요."
+        : "歩きやすい道として登録された散歩道です。";
+    fallbackName = lang === "ko" ? "근처 산책로" : "近くの散歩道";
+  } else if (waterway === "riverbank" || natural === "water") {
+    kindLabel = lang === "ko" ? "강변 / 수변" : "川辺・水辺";
+    kindClassName = "bg-sky-100 text-sky-700";
+    note =
+      lang === "ko"
+        ? "강변이나 수변 주변 산책 후보예요."
+        : "川辺や水辺の散歩候補です。";
+    fallbackName = lang === "ko" ? "근처 강변길" : "近くの川辺";
+  } else if (leisure === "garden" || landuse === "grass") {
+    kindLabel = lang === "ko" ? "녹지" : "緑地";
+    kindClassName = "bg-emerald-100 text-emerald-700";
+    note =
+      lang === "ko"
+        ? "잔디나 녹지 공간으로 표시된 곳이에요."
+        : "芝生や緑地として表示された場所です。";
+    fallbackName = lang === "ko" ? "근처 녹지" : "近くの緑地";
+  }
+
+  const name = tags.name || fallbackName;
+  const distanceKm = calculateDistanceKm(userLat, userLon, lat, lon);
+
+  return {
+    id: String(item.id),
+    name,
+    lat,
+    lon,
+    distanceKm,
+    kindLabel,
+    kindClassName,
+    note,
+    mapUrl: `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`,
+    directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
+  };
+}
+
+
+type SeasonalRiskCard = {
+  title: string;
+  badge: string;
+  badgeClass: string;
+  cardClass: string;
+  bullets: string[];
+};
+
+function getCurrentSeasonName(month: number, lang: Language) {
+  if (month >= 3 && month <= 5) {
+    return lang === "ko" ? "봄" : "春";
+  }
+
+  if (month >= 6 && month <= 8) {
+    return lang === "ko" ? "여름" : "夏";
+  }
+
+  if (month >= 9 && month <= 11) {
+    return lang === "ko" ? "가을" : "秋";
+  }
+
+  return lang === "ko" ? "겨울" : "冬";
+}
+
+function getSeasonalRiskCards(
+  lang: Language,
+  weather: WeatherData | null,
+  groundTemperature: number
+): SeasonalRiskCard[] {
+  const month = new Date().getMonth() + 1;
+  const warmSeason = month >= 4 && month <= 11;
+  const rainySeason = month >= 6 && month <= 7;
+  const peakSummer = month >= 7 && month <= 9;
+  const autumnTickSeason = month >= 9 && month <= 11;
+  const coldSeason = month === 12 || month <= 2;
+
+  const tickCard: SeasonalRiskCard = {
+    title: lang === "ko" ? "진드기 / 벼룩" : "マダニ・ノミ",
+    badge:
+      rainySeason || peakSummer
+        ? lang === "ko"
+          ? "활동 높음"
+          : "活動高め"
+        : warmSeason || autumnTickSeason
+          ? lang === "ko"
+            ? "주의"
+            : "注意"
+          : lang === "ko"
+            ? "낮음"
+            : "低め",
+    badgeClass:
+      rainySeason || peakSummer
+        ? "bg-red-100 text-red-700"
+        : warmSeason || autumnTickSeason
+          ? "bg-amber-100 text-amber-700"
+          : "bg-green-100 text-green-700",
+    cardClass:
+      rainySeason || peakSummer
+        ? "bg-red-50"
+        : warmSeason || autumnTickSeason
+          ? "bg-amber-50"
+          : "bg-green-50",
+    bullets:
+      lang === "ko"
+        ? [
+            rainySeason || peakSummer
+              ? "지금은 진드기·벼룩 활동이 활발한 시기예요. 풀숲, 강변, 수풀 산책은 특히 주의하세요."
+              : warmSeason || autumnTickSeason
+                ? "산책 후 발, 배, 겨드랑이, 귀 뒤를 꼭 확인해주세요."
+                : "겨울철에는 상대적으로 낮지만 실내외 이동이 많은 아이는 계속 확인이 필요해요.",
+            "벼룩·진드기 예방약 날짜를 놓치지 말고, 산책 후 브러싱을 해주세요.",
+          ]
+        : [
+            rainySeason || peakSummer
+              ? "今はマダニ・ノミが活発な時期です。草むら、川辺、茂みの散歩は特に注意しましょう。"
+              : warmSeason || autumnTickSeason
+                ? "散歩後は足、わき、耳の後ろ、お腹まわりを確認してください。"
+                : "冬は比較的低めですが、継続してチェックすると安心です。",
+            "予防薬の日付を忘れず、散歩後はブラッシングすると安心です。",
+          ],
+  };
+
+  const infectionCard: SeasonalRiskCard = {
+    title: lang === "ko" ? "감염병 / 유행성 질환" : "感染症・流行性疾患",
+    badge:
+      warmSeason
+        ? lang === "ko"
+          ? "주의"
+          : "注意"
+        : lang === "ko"
+          ? "기본 주의"
+          : "基本注意",
+    badgeClass: warmSeason ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-700",
+    cardClass: warmSeason ? "bg-orange-50" : "bg-slate-50",
+    bullets:
+      lang === "ko"
+        ? [
+            rainySeason || peakSummer
+              ? "모기 활동이 늘어나는 시기라 심장사상충 예방을 놓치지 않는 것이 중요해요."
+              : "지역 상황에 따라 백신 및 예방약 스케줄을 꾸준히 확인해주세요.",
+            rainySeason
+              ? "비 온 뒤 고인 물, 젖은 흙길은 렙토스피라 등 위생 위험이 있을 수 있어요."
+              : "진드기 매개 감염병 예방을 위해 산책 후 몸 상태를 확인해주세요.",
+          ]
+        : [
+            rainySeason || peakSummer
+              ? "蚊が増える時期なので、フィラリア予防を忘れないことが大切です。"
+              : "地域状況に合わせてワクチン・予防薬の予定を確認してください。",
+            rainySeason
+              ? "雨上がりの水たまりや湿った土道は、衛生面に注意しましょう。"
+              : "マダニ媒介感染症予防のため、散歩後の体チェックが安心です。",
+          ],
+  };
+
+  const heatDanger = groundTemperature >= 46 || (weather?.temperature ?? 0) >= 30;
+  const heatWarning = groundTemperature >= 41 || (weather?.temperature ?? 0) >= 26;
+
+  const heatCard: SeasonalRiskCard = {
+    title: lang === "ko" ? "더위 / 열사병 / 아스팔트" : "暑さ・熱中症・アスファルト",
+    badge: heatDanger
+      ? lang === "ko"
+        ? "위험"
+        : "危険"
+      : heatWarning
+        ? lang === "ko"
+          ? "주의"
+          : "注意"
+        : lang === "ko"
+          ? "확인"
+          : "確認",
+    badgeClass: heatDanger
+      ? "bg-red-100 text-red-700"
+      : heatWarning
+        ? "bg-amber-100 text-amber-700"
+        : "bg-green-100 text-green-700",
+    cardClass: heatDanger
+      ? "bg-red-50"
+      : heatWarning
+        ? "bg-amber-50"
+        : "bg-green-50",
+    bullets:
+      lang === "ko"
+        ? [
+            `현재 예상 지면온도 ${groundTemperature}℃ 기준으로, 짧은 산책이라도 발바닥과 호흡 상태를 꼭 확인해주세요.`,
+            heatDanger
+              ? "한낮 산책보다 이른 아침 또는 해진 뒤 산책이 더 안전해요."
+              : "산책 중 물, 그늘, 휴식 시간을 충분히 챙겨주세요.",
+          ]
+        : [
+            `現在の予想路面温度 ${groundTemperature}℃ を目安に、肉球と呼吸状態を確認してください。`,
+            heatDanger
+              ? "日中よりも早朝や日没後のお散歩が安全です。"
+              : "散歩中は水分、日陰、休憩をしっかり確保しましょう。",
+          ],
+  };
+
+  const severeWeatherCard: SeasonalRiskCard = {
+    title: lang === "ko" ? "비 / 태풍 / 폭염 / 한파" : "雨・台風・猛暑・寒波",
+    badge:
+      rainySeason || peakSummer
+        ? lang === "ko"
+          ? "계절 주의"
+          : "季節注意"
+        : coldSeason
+          ? lang === "ko"
+            ? "한파 주의"
+            : "寒波注意"
+          : lang === "ko"
+            ? "기본 확인"
+            : "基本確認",
+    badgeClass:
+      rainySeason || peakSummer
+        ? "bg-sky-100 text-sky-700"
+        : coldSeason
+          ? "bg-indigo-100 text-indigo-700"
+          : "bg-slate-100 text-slate-700",
+    cardClass:
+      rainySeason || peakSummer
+        ? "bg-sky-50"
+        : coldSeason
+          ? "bg-indigo-50"
+          : "bg-slate-50",
+    bullets:
+      lang === "ko"
+        ? [
+            rainySeason
+              ? "장마철에는 젖은 노면, 미끄럼, 피부 트러블에 주의하고 산책 후 잘 말려주세요."
+              : peakSummer
+                ? "폭염 경보 수준의 더위에는 실외 산책 대신 실내 놀이를 고려해주세요."
+                : coldSeason
+                  ? "한파나 눈·얼음길에는 체온 유지와 미끄럼 사고를 조심해주세요."
+                  : "강풍·호우 예보가 있으면 실외 산책 대신 짧은 배변 산책을 고려해주세요.",
+            rainySeason || (weather?.windSpeed ?? 0) >= 12
+              ? "비바람이 강하거나 태풍 예보가 있으면 무리한 외출은 피하는 것이 좋아요."
+              : "출발 전 실시간 날씨와 노면 상태를 한 번 더 확인하면 더 안전해요.",
+          ]
+        : [
+            rainySeason
+              ? "梅雨時は濡れた路面、すべり、皮膚トラブルに注意し、帰宅後はよく乾かしましょう。"
+              : peakSummer
+                ? "猛暑レベルの日は屋外散歩より室内遊びを検討してください。"
+                : coldSeason
+                  ? "寒波や雪・凍結路面では体温低下と転倒に注意してください。"
+                  : "強風・大雨予報のときは短いトイレ散歩に切り替えるのも安心です。",
+            rainySeason || (weather?.windSpeed ?? 0) >= 12
+              ? "風雨が強い日や台風予報時は、無理なお出かけを避けるのがおすすめです。"
+              : "出発前に最新の天気と路面状態をもう一度確認しましょう。",
+          ],
+  };
+
+  return [tickCard, infectionCard, heatCard, severeWeatherCard];
 }
 
 function getRiskMessage(temp: number, lang: Language) {
@@ -889,6 +1383,29 @@ export default function Home() {
     "loading" | "success" | "fallback" | "unsupported" | "denied"
   >("loading");
   const [isLoadingWeather, setIsLoadingWeather] = useState(true);
+  const [nearbyVets, setNearbyVets] = useState<VetClinic[]>([]);
+  const [isLoadingVets, setIsLoadingVets] = useState(false);
+  const [vetFetchStatus, setVetFetchStatus] = useState<
+    "idle" | "loading" | "success" | "empty" | "error"
+  >("idle");
+  const [nearbyDogSpots, setNearbyDogSpots] = useState<DogFriendlySpot[]>([]);
+  const [isLoadingDogSpots, setIsLoadingDogSpots] = useState(false);
+  const [dogSpotFetchStatus, setDogSpotFetchStatus] = useState<
+    "idle" | "loading" | "success" | "empty" | "error"
+  >("idle");
+  const [favoriteVet, setFavoriteVet] = useState<FavoriteVet>({
+    name: "",
+    phone: "",
+    address: "",
+    openingHours: "",
+    memo: "",
+  });
+  const [isFavoriteVetEditorOpen, setIsFavoriteVetEditorOpen] = useState(false);
+  const [favoriteVetNameInput, setFavoriteVetNameInput] = useState("");
+  const [favoriteVetPhoneInput, setFavoriteVetPhoneInput] = useState("");
+  const [favoriteVetAddressInput, setFavoriteVetAddressInput] = useState("");
+  const [favoriteVetHoursInput, setFavoriteVetHoursInput] = useState("");
+  const [favoriteVetMemoInput, setFavoriteVetMemoInput] = useState("");
 
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timer, setTimer] = useState(7);
@@ -953,6 +1470,23 @@ export default function Home() {
 
     if (savedLang === "ko" || savedLang === "ja") {
       setLang(savedLang);
+    }
+
+    const savedFavoriteVet = localStorage.getItem("wanpo-favorite-vet");
+
+    if (savedFavoriteVet) {
+      try {
+        const parsedFavoriteVet = JSON.parse(savedFavoriteVet) as Partial<FavoriteVet>;
+        setFavoriteVet({
+          name: parsedFavoriteVet.name || "",
+          phone: parsedFavoriteVet.phone || "",
+          address: parsedFavoriteVet.address || "",
+          openingHours: parsedFavoriteVet.openingHours || "",
+          memo: parsedFavoriteVet.memo || "",
+        });
+      } catch {
+        localStorage.removeItem("wanpo-favorite-vet");
+      }
     }
   }, []);
 
@@ -1039,9 +1573,46 @@ export default function Home() {
       };
     });
 
+  const seasonalRiskCards = getSeasonalRiskCards(lang, weather, groundTemperature);
+  const currentSeasonName = getCurrentSeasonName(new Date().getMonth() + 1, lang);
+
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
     APP_URL
   )}`;
+
+
+  const emergencyVetSearchUrl =
+    latitude !== null && longitude !== null
+      ? `https://www.google.com/maps/search/${encodeURIComponent(
+          "24時間 動物病院"
+        )}/@${latitude},${longitude},12z`
+      : `https://www.google.com/maps/search/${encodeURIComponent(
+          "24時間 動物病院"
+        )}`;
+
+
+  const dogCafeSearchQuery =
+    lang === "ko" ? "강아지 동반 카페" : "犬同伴 カフェ 近く";
+  const dogRestaurantSearchQuery =
+    lang === "ko" ? "강아지 동반 식당" : "犬同伴 レストラン 近く";
+
+  const dogCafeSearchUrl =
+    latitude !== null && longitude !== null
+      ? `https://www.google.com/maps/search/${encodeURIComponent(
+          dogCafeSearchQuery
+        )}/@${latitude},${longitude},14z`
+      : `https://www.google.com/maps/search/${encodeURIComponent(
+          dogCafeSearchQuery
+        )}`;
+
+  const dogRestaurantSearchUrl =
+    latitude !== null && longitude !== null
+      ? `https://www.google.com/maps/search/${encodeURIComponent(
+          dogRestaurantSearchQuery
+        )}/@${latitude},${longitude},14z`
+      : `https://www.google.com/maps/search/${encodeURIComponent(
+          dogRestaurantSearchQuery
+        )}`;
 
   useEffect(() => {
     async function fetchWeather(
@@ -1138,6 +1709,132 @@ export default function Home() {
       }
     );
   }, []);
+
+  useEffect(() => {
+    async function fetchNearbyDogSpots(currentLatitude: number, currentLongitude: number) {
+      setIsLoadingDogSpots(true);
+      setDogSpotFetchStatus("loading");
+
+      try {
+        const query = `
+          [out:json][timeout:25];
+          (
+            node["leisure"="dog_park"](around:4000,${currentLatitude},${currentLongitude});
+            way["leisure"="dog_park"](around:4000,${currentLatitude},${currentLongitude});
+            relation["leisure"="dog_park"](around:4000,${currentLatitude},${currentLongitude});
+
+            node["leisure"="park"](around:4000,${currentLatitude},${currentLongitude});
+            way["leisure"="park"](around:4000,${currentLatitude},${currentLongitude});
+            relation["leisure"="park"](around:4000,${currentLatitude},${currentLongitude});
+
+            way["highway"~"footway|path|pedestrian"]["name"](around:2500,${currentLatitude},${currentLongitude});
+            relation["route"="foot"]["name"](around:4000,${currentLatitude},${currentLongitude});
+            way["waterway"="riverbank"]["name"](around:5000,${currentLatitude},${currentLongitude});
+            way["natural"="water"]["name"](around:5000,${currentLatitude},${currentLongitude});
+            way["leisure"="garden"](around:3500,${currentLatitude},${currentLongitude});
+            way["landuse"="grass"](around:3000,${currentLatitude},${currentLongitude});
+          );
+          out center tags;
+        `;
+
+        const response = await fetch(
+          `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
+        );
+
+        if (!response.ok) {
+          throw new Error("산책 장소 API 호출 실패");
+        }
+
+        const data = await response.json();
+        const elements = Array.isArray(data.elements) ? data.elements : [];
+
+        const mapped = elements
+          .map((item: any) => normalizeDogFriendlySpot(item, currentLatitude, currentLongitude, lang))
+          .filter((item: DogFriendlySpot | null): item is DogFriendlySpot => Boolean(item))
+          .sort((a: DogFriendlySpot, b: DogFriendlySpot) => a.distanceKm - b.distanceKm);
+
+        const uniqueMap = new Map<string, DogFriendlySpot>();
+        mapped.forEach((spot) => {
+          const key = `${spot.kindLabel}-${spot.name}`;
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, spot);
+          }
+        });
+
+        const spots = Array.from(uniqueMap.values()).slice(0, 8);
+        setNearbyDogSpots(spots);
+        setDogSpotFetchStatus(spots.length > 0 ? "success" : "empty");
+      } catch (error) {
+        console.error(error);
+        setNearbyDogSpots([]);
+        setDogSpotFetchStatus("error");
+      } finally {
+        setIsLoadingDogSpots(false);
+      }
+    }
+
+    if (latitude === null || longitude === null) {
+      setNearbyDogSpots([]);
+      setDogSpotFetchStatus("idle");
+      return;
+    }
+
+    fetchNearbyDogSpots(latitude, longitude);
+  }, [latitude, longitude, lang]);
+
+  useEffect(() => {
+    async function fetchNearbyVets(currentLatitude: number, currentLongitude: number) {
+      setIsLoadingVets(true);
+      setVetFetchStatus("loading");
+
+      try {
+        const query = `
+          [out:json][timeout:25];
+          (
+            node["amenity"="veterinary"](around:20000,${currentLatitude},${currentLongitude});
+            way["amenity"="veterinary"](around:20000,${currentLatitude},${currentLongitude});
+            relation["amenity"="veterinary"](around:20000,${currentLatitude},${currentLongitude});
+          );
+          out center tags;
+        `;
+
+        const response = await fetch(
+          `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
+        );
+
+        if (!response.ok) {
+          throw new Error("동물병원 API 호출 실패");
+        }
+
+        const data = await response.json();
+        const elements = Array.isArray(data.elements) ? data.elements : [];
+
+        const clinics = elements
+          .map((item: any) => normalizeVetClinic(item, currentLatitude, currentLongitude, lang))
+          .filter((item: VetClinic | null): item is VetClinic => Boolean(item))
+          .filter((clinic: VetClinic) => clinic.serviceLabel.includes("24"))
+          .sort((a: VetClinic, b: VetClinic) => a.distanceKm - b.distanceKm)
+          .slice(0, 8);
+
+        setNearbyVets(clinics);
+        setVetFetchStatus(clinics.length > 0 ? "success" : "empty");
+      } catch (error) {
+        console.error(error);
+        setNearbyVets([]);
+        setVetFetchStatus("error");
+      } finally {
+        setIsLoadingVets(false);
+      }
+    }
+
+    if (latitude === null || longitude === null) {
+      setNearbyVets([]);
+      setVetFetchStatus("idle");
+      return;
+    }
+
+    fetchNearbyVets(latitude, longitude);
+  }, [latitude, longitude, lang]);
 
   useEffect(() => {
     if (!isTimerRunning) return;
@@ -1424,6 +2121,64 @@ export default function Home() {
     }
   }
 
+  function openFavoriteVetEditor() {
+    setFavoriteVetNameInput(favoriteVet.name);
+    setFavoriteVetPhoneInput(favoriteVet.phone);
+    setFavoriteVetAddressInput(favoriteVet.address);
+    setFavoriteVetHoursInput(favoriteVet.openingHours);
+    setFavoriteVetMemoInput(favoriteVet.memo);
+    setIsFavoriteVetEditorOpen(true);
+  }
+
+  function saveFavoriteVet() {
+    const nextFavoriteVet: FavoriteVet = {
+      name: favoriteVetNameInput.trim(),
+      phone: favoriteVetPhoneInput.trim(),
+      address: favoriteVetAddressInput.trim(),
+      openingHours: favoriteVetHoursInput.trim(),
+      memo: favoriteVetMemoInput.trim(),
+    };
+
+    setFavoriteVet(nextFavoriteVet);
+    localStorage.setItem("wanpo-favorite-vet", JSON.stringify(nextFavoriteVet));
+    setIsFavoriteVetEditorOpen(false);
+  }
+
+  function clearFavoriteVet() {
+    const shouldClear = window.confirm(
+      lang === "ko"
+        ? "자주 가는 병원 정보를 삭제할까요?"
+        : "かかりつけ病院の情報を削除しますか？"
+    );
+
+    if (!shouldClear) return;
+
+    const emptyFavoriteVet = {
+      name: "",
+      phone: "",
+      address: "",
+      openingHours: "",
+      memo: "",
+    };
+
+    setFavoriteVet(emptyFavoriteVet);
+    localStorage.removeItem("wanpo-favorite-vet");
+    setIsFavoriteVetEditorOpen(false);
+  }
+
+  const hasFavoriteVet = Boolean(
+    favoriteVet.name || favoriteVet.phone || favoriteVet.address || favoriteVet.openingHours || favoriteVet.memo
+  );
+  const favoriteVetPhoneUrl = favoriteVet.phone
+    ? `tel:${favoriteVet.phone.replace(/[^+\d]/g, "")}`
+    : null;
+  const favoriteVetMapUrl = favoriteVet.address || favoriteVet.name
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${favoriteVet.name} ${favoriteVet.address}`)}`
+    : null;
+  const favoriteVetDirectionsUrl = favoriteVet.address || favoriteVet.name
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${favoriteVet.name} ${favoriteVet.address}`)}`
+    : null;
+
   if (!dogProfile || isAddingDog) {
     return (
       <main
@@ -1565,7 +2320,7 @@ export default function Home() {
             const diffX = touchStartX - event.changedTouches[0].clientX;
             if (Math.abs(diffX) > 55) {
               setActivePage((currentPage) => {
-                if (diffX > 0) return Math.min(currentPage + 1, 2);
+                if (diffX > 0) return Math.min(currentPage + 1, 5);
                 return Math.max(currentPage - 1, 0);
               });
             }
@@ -1880,7 +2635,7 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="mt-3 max-h-44 overflow-y-auto rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-slate-700 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      <div className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-slate-700">
                         <p className="font-black text-blue-700">
                           {lang === "ko" ? "건강 기록 요약" : "健康記録のまとめ"}
                         </p>
@@ -1903,7 +2658,7 @@ export default function Home() {
                               date: dogProfile.medication?.fleaTickNextDate,
                             },
                           ].map((item) => (
-                            <div key={item.label} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2">
+                            <div key={item.label} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-1.5">
                               <span className="truncate font-bold">{item.label}</span>
                               <span className={`shrink-0 rounded-full px-2 py-1 font-black ${getScheduleStatus(item.date, lang).className}`}>
                                 {formatSavedDate(item.date, lang)}
@@ -1912,7 +2667,158 @@ export default function Home() {
                           ))}
                         </div>
                       </div>
+
+                      <div className="mt-3 rounded-2xl bg-emerald-50 p-3 text-xs leading-5 text-slate-700">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-black text-emerald-700">
+                            {lang === "ko" ? "자주 가는 병원" : "かかりつけ病院"}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={openFavoriteVetEditor}
+                            className="shrink-0 rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] font-black text-white"
+                          >
+                            {hasFavoriteVet
+                              ? lang === "ko"
+                                ? "수정"
+                                : "編集"
+                              : lang === "ko"
+                                ? "등록"
+                                : "登録"}
+                          </button>
+                        </div>
+
+                        {hasFavoriteVet ? (
+                          <div className="mt-2 rounded-2xl bg-white p-3">
+                            <p className="text-sm font-black text-slate-700">
+                              {favoriteVet.name || (lang === "ko" ? "병원명 미입력" : "病院名未入力")}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-600">
+                              <span className="font-bold">{lang === "ko" ? "전화" : "電話"}: </span>
+                              {favoriteVet.phone || (lang === "ko" ? "미입력" : "未入力")}
+                            </p>
+                            <p className="mt-1 line-clamp-1 text-xs text-slate-600">
+                              <span className="font-bold">{lang === "ko" ? "주소" : "住所"}: </span>
+                              {favoriteVet.address || (lang === "ko" ? "미입력" : "未入力")}
+                            </p>
+                            <p className="mt-1 line-clamp-1 text-xs text-slate-600">
+                              <span className="font-bold">{lang === "ko" ? "영업시간" : "診療時間"}: </span>
+                              {favoriteVet.openingHours || (lang === "ko" ? "미입력" : "未入力")}
+                            </p>
+
+                            <div className="mt-2 grid grid-cols-3 gap-2">
+                              <a
+                                href={favoriteVetPhoneUrl || undefined}
+                                className={`rounded-2xl px-2 py-2 text-center text-xs font-black text-white shadow ${favoriteVetPhoneUrl ? "bg-emerald-500" : "bg-slate-300 pointer-events-none"}`}
+                              >
+                                {lang === "ko" ? "전화" : "電話"}
+                              </a>
+                              <a
+                                href={favoriteVetMapUrl || undefined}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={`rounded-2xl px-2 py-2 text-center text-xs font-black text-white shadow ${favoriteVetMapUrl ? "bg-slate-900" : "bg-slate-300 pointer-events-none"}`}
+                              >
+                                {lang === "ko" ? "지도" : "地図"}
+                              </a>
+                              <a
+                                href={favoriteVetDirectionsUrl || undefined}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={`rounded-2xl px-2 py-2 text-center text-xs font-black text-white shadow ${favoriteVetDirectionsUrl ? "bg-blue-500" : "bg-slate-300 pointer-events-none"}`}
+                              >
+                                {lang === "ko" ? "길찾기" : "経路"}
+                              </a>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="mt-2 rounded-2xl bg-white px-3 py-2 text-slate-500">
+                            {lang === "ko"
+                              ? "자주 가는 병원을 등록해두면 응급 상황에서 바로 전화하거나 길찾기를 열 수 있어요."
+                              : "かかりつけ病院を登録しておくと、緊急時にすぐ電話・経路確認ができます。"}
+                          </p>
+                        )}
+                      </div>
                     </div>
+
+                    {isFavoriteVetEditorOpen && (
+                      <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-slate-700">
+                              {lang === "ko" ? "자주 가는 병원 등록" : "かかりつけ病院を登録"}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {lang === "ko" ? "병원명, 전화번호, 주소를 저장해둘 수 있어요." : "病院名、電話番号、住所を保存できます。"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setIsFavoriteVetEditorOpen(false)}
+                            className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600"
+                          >
+                            {lang === "ko" ? "닫기" : "閉じる"}
+                          </button>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-1 gap-2 text-xs font-bold text-slate-700">
+                          <input
+                            value={favoriteVetNameInput}
+                            onChange={(e) => setFavoriteVetNameInput(e.target.value)}
+                            placeholder={lang === "ko" ? "병원명" : "病院名"}
+                            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
+                          />
+                          <input
+                            value={favoriteVetPhoneInput}
+                            onChange={(e) => setFavoriteVetPhoneInput(e.target.value)}
+                            placeholder={lang === "ko" ? "전화번호" : "電話番号"}
+                            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
+                          />
+                          <input
+                            value={favoriteVetAddressInput}
+                            onChange={(e) => setFavoriteVetAddressInput(e.target.value)}
+                            placeholder={lang === "ko" ? "주소" : "住所"}
+                            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
+                          />
+                          <input
+                            value={favoriteVetHoursInput}
+                            onChange={(e) => setFavoriteVetHoursInput(e.target.value)}
+                            placeholder={lang === "ko" ? "영업시간 / 야간 대응 메모" : "診療時間・夜間対応メモ"}
+                            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
+                          />
+                          <input
+                            value={favoriteVetMemoInput}
+                            onChange={(e) => setFavoriteVetMemoInput(e.target.value)}
+                            placeholder={lang === "ko" ? "메모" : "メモ"}
+                            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
+                          />
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={saveFavoriteVet}
+                            className="rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-black text-white shadow"
+                          >
+                            {lang === "ko" ? "저장" : "保存"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsFavoriteVetEditorOpen(false)}
+                            className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 shadow"
+                          >
+                            {lang === "ko" ? "취소" : "キャンセル"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearFavoriteVet}
+                            className="rounded-2xl bg-red-50 px-3 py-2 text-xs font-black text-red-600 shadow"
+                          >
+                            {lang === "ko" ? "삭제" : "削除"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-white shadow">
@@ -2212,6 +3118,309 @@ export default function Home() {
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-slate-700">
+                        {lang === "ko" ? "계절별 / 현재 유행 위험 정보" : "季節別・現在の注意情報"}
+                      </p>
+                      <p className="mt-1 text-xs leading-4 text-slate-500">
+                        {lang === "ko"
+                          ? `${currentSeasonName} 산책에서 특히 주의할 내용을 모았어요.`
+                          : `${currentSeasonName}のお散歩で特に気をつけたいポイントです。`}
+                      </p>
+                    </div>
+                    <div className="shrink-0 rounded-2xl bg-blue-50 px-3 py-2 text-center">
+                      <p className="text-[10px] font-bold text-blue-500">
+                        {lang === "ko" ? "현재 시즌" : "現在の季節"}
+                      </p>
+                      <p className="text-sm font-black text-blue-700">{currentSeasonName}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white p-3 shadow [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="space-y-2">
+                    {seasonalRiskCards.map((card) => (
+                      <div key={card.title} className={`rounded-3xl p-3 ${card.cardClass}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-black text-slate-700">{card.title}</p>
+                          <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${card.badgeClass}`}>
+                            {card.badge}
+                          </span>
+                        </div>
+                        <ul className="mt-2 space-y-1 text-xs leading-5 text-slate-700">
+                          {card.bullets.map((bullet) => (
+                            <li key={bullet} className="rounded-2xl bg-white/80 px-3 py-2">
+                              • {bullet}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+
+                    <div className="rounded-3xl bg-slate-50 p-3">
+                      <p className="text-sm font-black text-slate-700">
+                        {lang === "ko" ? "산책 후 체크" : "散歩後チェック"}
+                      </p>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs leading-4 text-slate-700">
+                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "발 / 발바닥" : "足・肉球"}</div>
+                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "귀 뒤 / 겨드랑이" : "耳の後ろ・わき"}</div>
+                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "배 / 꼬리 주변" : "お腹・しっぽ周り"}</div>
+                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "호흡 / 탈수" : "呼吸・脱水"}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activePage === 3 && (
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+                <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-slate-700">
+                        {lang === "ko" ? "근처 강아지 산책 장소" : "近くのワンちゃん散歩スポット"}
+                      </p>
+                      <p className="mt-1 text-xs leading-4 text-slate-500">
+                        {lang === "ko"
+                          ? "무료 지도 데이터를 바탕으로 공원, 산책로, 강변길, 녹지, 도그 파크를 보여줘요."
+                          : "無料の地図データをもとに、公園・散歩道・川辺・緑地・ドッグパークを表示します。"}
+                      </p>
+                    </div>
+                    <div className="shrink-0 rounded-2xl bg-green-50 px-3 py-2 text-center">
+                      <p className="text-[10px] font-bold text-green-600">{lang === "ko" ? "근처 검색" : "周辺検索"}</p>
+                      <p className="text-sm font-black text-green-700">5km</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white p-3 shadow [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="space-y-2">
+                    <div className="rounded-2xl bg-green-50 px-3 py-2 text-xs leading-5 text-slate-700">
+                      <p className="font-black text-green-700">{lang === "ko" ? "안내" : "ご案内"}</p>
+                      <p className="mt-1">
+                        {lang === "ko"
+                          ? "공원과 산책로는 공개 지도 데이터 기준이라 실제 출입 가능 여부나 반려견 허용 규칙은 현장 표지판을 함께 확인해주세요."
+                          : "公園や散歩道は公開地図データをもとに表示しています。実際の利用可否や犬同伴ルールは現地の案内もご確認ください。"}
+                      </p>
+                    </div>
+
+                    {isLoadingDogSpots && (
+                      <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
+                        {lang === "ko" ? "근처 산책 장소를 찾는 중이에요..." : "近くの散歩スポットを探しています..."}
+                      </div>
+                    )}
+
+                    {!isLoadingDogSpots && dogSpotFetchStatus === "empty" && (
+                      <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
+                        {lang === "ko"
+                          ? "근처 산책 장소를 찾지 못했어요. 위치 권한이나 네트워크를 확인해주세요."
+                          : "近くの散歩スポットが見つかりませんでした。位置情報または通信状況をご確認ください。"}
+                      </div>
+                    )}
+
+                    {!isLoadingDogSpots && dogSpotFetchStatus === "error" && (
+                      <div className="rounded-3xl bg-red-50 px-4 py-6 text-center text-sm font-bold text-red-600">
+                        {lang === "ko"
+                          ? "산책 장소 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+                          : "散歩スポット情報を取得できませんでした。しばらくしてから再度お試しください。"}
+                      </div>
+                    )}
+
+                    {nearbyDogSpots.map((spot) => (
+                      <div key={spot.id} className="rounded-3xl bg-slate-50 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-black text-slate-700">{spot.name}</p>
+                            <p className="mt-1 text-xs font-bold text-slate-500">
+                              {lang === "ko" ? "현재 위치에서 " : "現在地から "}
+                              {formatDistanceText(spot.distanceKm, lang)}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${spot.kindClassName}`}>
+                            {spot.kindLabel}
+                          </span>
+                        </div>
+                        <p className="mt-2 rounded-2xl bg-white px-3 py-2 text-xs leading-5 text-slate-600">{spot.note}</p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <a
+                            href={spot.mapUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-2xl bg-slate-900 px-2 py-2 text-center text-xs font-black text-white shadow"
+                          >
+                            {lang === "ko" ? "지도" : "地図"}
+                          </a>
+                          <a
+                            href={spot.directionsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-2xl bg-green-500 px-2 py-2 text-center text-xs font-black text-white shadow"
+                          >
+                            {lang === "ko" ? "길찾기" : "経路"}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="rounded-3xl bg-amber-50 p-3">
+                      <p className="text-sm font-black text-amber-700">
+                        {lang === "ko" ? "강아지 동반 카페 / 식당 찾기" : "犬同伴カフェ・レストランを探す"}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                        {lang === "ko"
+                          ? "정확한 반려견 동반 가능 여부는 가게마다 달라서, 지금은 Google 검색 버튼으로 연결해드려요."
+                          : "犬同伴可否は店舗ごとに異なるため、今はGoogle検索ボタンで確認できるようにしています。"}
+                      </p>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <a
+                          href={dogCafeSearchUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-2xl bg-amber-500 px-2 py-2 text-center text-xs font-black text-white shadow"
+                        >
+                          {lang === "ko" ? "카페 찾기" : "カフェ検索"}
+                        </a>
+                        <a
+                          href={dogRestaurantSearchUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-2xl bg-orange-500 px-2 py-2 text-center text-xs font-black text-white shadow"
+                        >
+                          {lang === "ko" ? "식당 찾기" : "レストラン検索"}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activePage === 4 && (
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+                <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-slate-700">
+                        {lang === "ko" ? "20km 이내 24시간 동물병원 후보" : "20km以内の24時間動物病院候補"}
+                      </p>
+                      <p className="mt-1 text-xs leading-4 text-slate-500">
+                        {lang === "ko"
+                          ? "현재 위치 기준 20km 이내에서 공개 데이터에 24시간 표시가 있는 병원만 보여줘요."
+                          : "現在地から20km以内で、公開データに24時間表示がある病院だけを表示します。"}
+                      </p>
+                    </div>
+                    <div className="shrink-0 rounded-2xl bg-blue-50 px-3 py-2 text-center">
+                      <p className="text-[10px] font-bold text-blue-500">{lang === "ko" ? "검색 범위" : "検索範囲"}</p>
+                      <p className="text-sm font-black text-blue-700">20km</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white p-3 shadow [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="space-y-2">
+                    <div className="rounded-2xl bg-blue-50 px-3 py-2 text-xs leading-5 text-slate-700">
+                      <p className="font-black text-blue-700">
+                        {lang === "ko" ? "안내" : "ご案内"}
+                      </p>
+                      <p className="mt-1">
+                        {lang === "ko"
+                          ? "일반 가까운 병원은 제외하고, 24시간 표시가 있는 후보만 보여줘요. 단, 공개 데이터가 틀릴 수 있으니 정보확인 버튼으로 주소·전화번호·진료시간을 반드시 확인해주세요."
+                          : "通常の近い病院は除外し、24時間表示がある候補だけを表示します。ただし公開データが誤っている場合があるため、情報確認ボタンで住所・電話番号・診療時間を必ず確認してください。"}
+                      </p>
+                    </div>
+
+                    {isLoadingVets && (
+                      <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
+                        {lang === "ko" ? "20km 이내 24시간 동물병원 후보를 찾는 중이에요..." : "20km以内の24時間動物病院候補を探しています..."}
+                      </div>
+                    )}
+
+                    {!isLoadingVets && vetFetchStatus === "empty" && (
+                      <div className="rounded-3xl bg-slate-50 px-4 py-5 text-center text-sm font-bold text-slate-500">
+                        <p>
+                          {lang === "ko"
+                            ? "공개 지도 데이터에서 20km 이내 24시간 표시 후보를 찾지 못했어요."
+                            : "公開地図データでは20km以内の24時間表示候補が見つかりませんでした。"}
+                        </p>
+                        <a
+                          href={emergencyVetSearchUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-3 inline-flex rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow"
+                        >
+                          {lang === "ko" ? "정보확인" : "情報確認"}
+                        </a>
+                      </div>
+                    )}
+
+                    {!isLoadingVets && vetFetchStatus === "error" && (
+                      <div className="rounded-3xl bg-red-50 px-4 py-6 text-center text-sm font-bold text-red-600">
+                        {lang === "ko"
+                          ? "동물병원 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
+                          : "動物病院情報を取得できませんでした。しばらくしてから再度お試しください。"}
+                      </div>
+                    )}
+
+                    {nearbyVets.map((clinic) => (
+                      <div key={clinic.id} className="rounded-3xl bg-slate-50 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-black text-slate-700">{clinic.name}</p>
+                            <p className="mt-1 text-xs font-bold text-slate-500">
+                              {lang === "ko" ? "현재 위치에서 " : "現在地から "}
+                              {formatDistanceText(clinic.distanceKm, lang)}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${clinic.serviceClassName}`}>
+                            {clinic.serviceLabel}
+                          </span>
+                        </div>
+
+                        <div className="mt-2 space-y-1 rounded-2xl bg-white px-3 py-3 text-xs leading-5 text-slate-700">
+                          <p className="text-[11px] text-slate-500">{clinic.note}</p>
+                          <p className="text-[11px] text-slate-500">
+                            {lang === "ko"
+                              ? "주소·전화번호·진료시간은 정보확인 버튼에서 최신 페이지로 확인해주세요."
+                              : "住所・電話番号・診療時間は情報確認ボタンから最新ページで確認してください。"}
+                          </p>
+                        </div>
+
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          <a
+                            href={clinic.phoneUrl || undefined}
+                            className={`rounded-2xl px-2 py-2 text-center text-[11px] font-black text-white shadow ${clinic.phoneUrl ? "bg-emerald-500" : "bg-slate-300 pointer-events-none"}`}
+                          >
+                            {lang === "ko" ? "전화" : "電話"}
+                          </a>
+                          <a
+                            href={clinic.infoUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-2xl bg-amber-500 px-2 py-2 text-center text-[11px] font-black text-white shadow"
+                          >
+                            {lang === "ko" ? "정보확인" : "情報確認"}
+                          </a>
+                          <a
+                            href={clinic.directionsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-2xl bg-blue-500 px-2 py-2 text-center text-[11px] font-black text-white shadow"
+                          >
+                            {lang === "ko" ? "길찾기" : "経路"}
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activePage === 5 && (
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+                <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-black text-slate-700">{t.handTest}</p>
                       <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500">
                         {t.handTestDesc}
@@ -2349,7 +3558,7 @@ export default function Home() {
           </button>
 
           <div className="flex items-center gap-2">
-            {[0, 1, 2].map((page) => (
+            {[0, 1, 2, 3, 4, 5].map((page) => (
               <button
                 key={page}
                 type="button"
@@ -2364,9 +3573,9 @@ export default function Home() {
 
           <button
             type="button"
-            onClick={() => setActivePage((page) => Math.min(page + 1, 2))}
+            onClick={() => setActivePage((page) => Math.min(page + 1, 5))}
             className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-black text-white disabled:bg-slate-300"
-            disabled={activePage === 2}
+            disabled={activePage === 5}
           >
             →
           </button>
