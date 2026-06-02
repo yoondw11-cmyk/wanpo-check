@@ -305,7 +305,7 @@ function getText(lang: Language) {
     resetProfile:
       lang === "ko" ? "강아지 정보 다시 설정" : "ワンちゃん情報を再設定",
     locationWeather: lang === "ko" ? "현재 위치/날씨" : "現在地/天気",
-    currentTemp: lang === "ko" ? "현재 기온" : "現在の気温",
+    currentTemp: lang === "ko" ? "현재 기온" : "現在気温",
     wind: lang === "ko" ? "풍속" : "風速",
     cloud: lang === "ko" ? "구름" : "雲量",
     radiation: lang === "ko" ? "일사량" : "日射量",
@@ -315,12 +315,12 @@ function getText(lang: Language) {
     groundTemp: lang === "ko" ? "예상 지면온도" : "予想路面温度",
     surface: lang === "ko" ? "바닥 종류" : "地面の種類",
     sun: lang === "ko" ? "햇빛 상태" : "日差し",
-    recommendedTime: lang === "ko" ? "추천 산책 시간" : "おすすめのお散歩時間",
+    recommendedTime: lang === "ko" ? "추천 산책 시간" : "おすすめ時間",
     handTest: lang === "ko" ? "손등 7초 테스트" : "手の甲7秒テスト",
     handTestDesc:
       lang === "ko"
         ? "산책 전, 손등을 지면에 대고 7초 동안 버틸 수 있는지 확인해보세요."
-        : "お散歩前に、手の甲を地面につけて7秒間耐えられるか確認しましょう。",
+        : "手の甲を地面に7秒つけて確認しましょう。",
     handTestRunning:
       lang === "ko"
         ? "손등을 지면에 대고 유지해주세요."
@@ -328,7 +328,7 @@ function getText(lang: Language) {
     handTestDone:
       lang === "ko"
         ? "7초 동안 괜찮았다면 산책 가능성이 높아요. 그래도 강아지 상태를 보면서 짧게 시작해주세요."
-        : "7秒間大丈夫なら、お散歩できる可能性が高いです。ただし様子を見ながら短めに始めましょう。",
+        : "7秒大丈夫なら可能性あり。様子を見て短めに。",
     timerStart: lang === "ko" ? "시작" : "開始",
     timerReset: lang === "ko" ? "리셋" : "リセット",
     loading: lang === "ko" ? "잠시만 기다려주세요..." : "少々お待ちください...",
@@ -337,26 +337,26 @@ function getText(lang: Language) {
         ? "강아지 이름을 입력해주세요."
         : "ワンちゃんの名前を入力してください。",
     cautionTitle:
-      lang === "ko" ? "산책 전 꼭 확인해주세요" : "お散歩前に必ず確認してください",
+      lang === "ko" ? "산책 전 꼭 확인해주세요" : "お散歩前の確認",
     cautionMain:
       lang === "ko"
         ? "이 앱의 지면온도는 실제 측정값이 아니라 날씨, 일사량, 바닥 종류를 바탕으로 계산한 추정값입니다."
-        : "このアプリの路面温度は実測値ではなく、天気・日射量・地面の種類をもとにした推定値です。",
+        : "路面温度は実測値ではなく、天気・日射量・地面からの推定値です。",
     cautionSub:
       lang === "ko"
         ? "산책 전 손등 7초 테스트와 강아지의 호흡, 걸음걸이, 컨디션을 함께 확인해주세요."
-        : "お散歩前には手の甲7秒テストと、ワンちゃんの呼吸・歩き方・体調も一緒に確認してください。",
+        : "手の甲7秒テストと、呼吸・歩き方・体調も確認してください。",
     tempGuideTitle:
       lang === "ko" ? "강아지 산책 지면온도 기준" : "お散歩の路面温度目安",
     guideSourceNote:
       lang === "ko"
         ? "참고: 수의사 및 동물보호단체의 고온 포장도로 주의 권장사항과 손등 7초 테스트를 바탕으로 한 앱용 참고 기준입니다."
-        : "参考：獣医師・動物保護団体が案内する高温の舗装路への注意喚起と「手の甲7秒テスト」をもとにしたアプリ用の目安です。",
+        : "参考：獣医師・動物保護団体の高温舗装路への注意喚起と手の甲7秒テストをもとにした目安です。",
     shareTitle: lang === "ko" ? "앱 공유하기" : "アプリを共有する",
     shareDescription:
       lang === "ko"
         ? "여름철 강아지 산책 가능 여부를 날씨와 예상 지면온도로 확인할 수 있는 앱입니다."
-        : "夏のお散歩前に、天気と予想路面温度から安全度を確認できるアプリです。",
+        : "天気と予想路面温度から安全度を確認できます。",
     copyIntro: lang === "ko" ? "소개문 복사" : "紹介文をコピー",
     shareButton: lang === "ko" ? "공유하기" : "共有する",
     copied: lang === "ko" ? "복사했어요" : "コピーしました",
@@ -452,6 +452,17 @@ function getUvLabel(value: number | undefined, lang: Language) {
   if (value < 8) return lang === "ko" ? "높음" : "高い";
   if (value < 11) return lang === "ko" ? "매우 높음" : "非常に高い";
   return lang === "ko" ? "위험" : "危険";
+}
+
+function getPm25Label(value: number | undefined, lang: Language) {
+  if (value === undefined) {
+    return "-";
+  }
+
+  if (value <= 9) return lang === "ko" ? "낮음" : "低い";
+  if (value <= 35) return lang === "ko" ? "보통" : "普通";
+  if (value <= 55) return lang === "ko" ? "높음" : "高い";
+  return lang === "ko" ? "매우 높음" : "非常に高い";
 }
 
 function getRiskMessage(temp: number, lang: Language) {
@@ -864,6 +875,7 @@ export default function Home() {
   const [copyStatus, setCopyStatus] = useState("");
 
   const t = getText(lang);
+  const isJapanese = lang === "ja";
 
   useEffect(() => {
     const savedProfiles = localStorage.getItem("wanpo-dog-profiles");
@@ -1518,959 +1530,1035 @@ export default function Home() {
 
   return (
     <main
-      className={`min-h-screen bg-gradient-to-b ${activeBreed.bg} p-6 text-slate-900`}
+      className={`h-[100svh] max-h-[100svh] overflow-hidden bg-gradient-to-b ${activeBreed.bg} px-0 py-2 text-slate-900`}
     >
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center">
-        <section className="relative overflow-hidden rounded-3xl bg-white/85 p-6 shadow-2xl backdrop-blur">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/40 opacity-40" />
+      <div className="mx-auto flex h-full max-h-full max-w-md flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-1 snap-x snap-mandatory gap-0 overflow-x-auto overflow-y-hidden scroll-smooth px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <section className="h-full min-w-full shrink-0 snap-start overflow-hidden px-2 pb-1">
+            <div className={`relative h-full max-h-full overflow-y-auto overscroll-contain rounded-3xl bg-white/85 shadow-2xl backdrop-blur [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isJapanese ? "p-3 text-[0.84em] leading-tight" : "p-5"}`}>
+              <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/40 opacity-40" />
 
-          <div className="relative z-20 mb-5 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-blue-500">{t.appName}</p>
-              <h1 className="text-3xl font-black">{t.title}</h1>
-            </div>
+              <div className="relative z-20 mb-5 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-blue-500">{t.appName}</p>
+                  <h1 className={`${isJapanese ? "text-2xl" : "text-3xl"} font-black`}>{t.title}</h1>
+                </div>
 
-            <button
-              type="button"
-              onClick={toggleLanguage}
-              className="rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white"
-            >
-              {t.languageButton}
-            </button>
-          </div>
-
-          <div className="relative z-10 mb-4 rounded-3xl bg-white p-3 shadow">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <p className="text-sm font-black text-slate-700">
-                {lang === "ko" ? "등록된 강아지" : "登録済みのワンちゃん"}
-              </p>
-              <p className="text-xs font-bold text-slate-400">
-                {dogProfiles.length}/5
-              </p>
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {dogProfiles.map((profile) => {
-                const isSelected = dogProfile.id === profile.id;
-
-                return (
-                  <button
-                    key={profile.id}
-                    type="button"
-                    onClick={() => selectDog(profile.id)}
-                    className={`flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2 text-xs font-black shadow ${
-                      isSelected
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-50 text-slate-700"
-                    }`}
-                  >
-                    <img
-                      src={breedData[profile.breed].image}
-                      alt={profile.name}
-                      className="h-8 w-8 rounded-full bg-white object-contain p-1"
-                    />
-                    {profile.name}
-                  </button>
-                );
-              })}
-
-              {dogProfiles.length < 5 && (
                 <button
                   type="button"
-                  onClick={startAddDog}
-                  className="shrink-0 rounded-2xl bg-blue-500 px-4 py-2 text-xs font-black text-white shadow"
+                  onClick={toggleLanguage}
+                  className={`${isJapanese ? "px-3 py-2 text-xs" : "px-4 py-2 text-sm"} rounded-full bg-slate-900 font-bold text-white`}
                 >
-                  {lang === "ko" ? "+ 추가" : "+ 追加"}
+                  {t.languageButton}
                 </button>
+              </div>
+
+              <div className="relative z-10 mb-4 rounded-3xl bg-white p-4 shadow">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
+                    <img
+                      src={breedData[dogProfile.breed].image}
+                      alt={
+                        lang === "ko"
+                          ? breedData[dogProfile.breed].labelKo
+                          : breedData[dogProfile.breed].labelJa
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className={`${isJapanese ? "text-xs" : "text-sm"} leading-5 text-slate-500`}>
+                      {lang === "ko"
+                        ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
+                        : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
+                    </p>
+                    <p className={`${isJapanese ? "text-base" : "text-lg"} mt-1 whitespace-nowrap font-black leading-6`}>
+                      {dogProfile.name}
+                      {t.nowWalkQuestion}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 mb-4 rounded-2xl bg-white p-4 shadow">
+                <p className="text-sm font-bold text-slate-700">
+                  {t.locationWeather}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">{locationText}</p>
+                <p className="mt-1 text-sm text-slate-500">{weatherStatusText}</p>
+
+                {isLoadingWeather && (
+                  <p className="mt-2 text-sm font-semibold text-blue-500">
+                    {t.loading}
+                  </p>
+                )}
+              </div>
+
+              <div className="relative z-10 rounded-3xl bg-blue-50 p-4 shadow-inner">
+                <p className="text-sm text-slate-500">{t.currentTemp}</p>
+                <div className="mt-1 flex items-end gap-2">
+                  <span className="text-3xl font-black">{airTemperature}</span>
+                  <span className="mb-1 text-lg font-semibold">℃</span>
+                </div>
+
+                {weather && (
+                  <div className={`${isJapanese ? "text-[10px]" : "text-[11px]"} mt-3 grid grid-cols-3 gap-2 text-center leading-4 text-slate-600`}>
+                    <div className="rounded-xl bg-white px-1 py-2">
+                      <p className="font-bold">{t.wind}</p>
+                      <p>{weather.windSpeed} km/h</p>
+                    </div>
+                    <div className="rounded-xl bg-white px-1 py-2">
+                      <p className="font-bold">{t.cloud}</p>
+                      <p>{weather.cloudCover}%</p>
+                    </div>
+                    <div className="rounded-xl bg-white px-1 py-2">
+                      <p className="font-bold">{t.radiation}</p>
+                      <p>{weather.radiation} W/m²</p>
+                    </div>
+                    <div className="rounded-xl bg-white px-1 py-2">
+                      <p className="font-bold">{t.uvIndex}</p>
+                      <p>
+                        {weather.uvIndex !== undefined
+                          ? `${weather.uvIndex} · ${getUvLabel(weather.uvIndex, lang)}`
+                          : "-"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-white px-1 py-2">
+                      <p className="font-bold">{t.airQuality}</p>
+                      <p>
+                        {weather.airQualityIndex !== undefined
+                          ? `${getAirQualityLabel(weather.airQualityIndex, lang)}`
+                          : "-"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-white px-1 py-2">
+                      <p className="font-bold">{t.pm25}</p>
+                      <p>
+                        {weather.pm25 !== undefined
+                          ? `${weather.pm25} µg/m³ · ${getPm25Label(weather.pm25, lang)}`
+                          : "-"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <p className="mt-4 text-sm text-slate-500">
+                  {t.groundTemp} ·{" "}
+                  {lang === "ko" ? currentSurface.labelKo : currentSurface.labelJa} ·{" "}
+                  {lang === "ko" ? currentSun.labelKo : currentSun.labelJa}
+                </p>
+
+                <div className="mt-2 flex items-end gap-2">
+                  <span className="text-7xl font-black">{groundTemperature}</span>
+                  <span className="mb-3 text-2xl font-semibold">℃</span>
+                </div>
+
+                <p
+                  className={`mt-3 rounded-full px-4 py-3 text-center font-black ${risk.className}`}
+                >
+                  {risk.label}
+                </p>
+              </div>
+
+              <div className="relative z-10 mt-5">
+                <p className="mb-2 text-sm font-bold text-slate-600">
+                  {t.surface}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(surfaceData).map(([key, surface]) => {
+                    const isSelected = selectedSurface === key;
+
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSelectedSurface(key as SurfaceType)}
+                        className={`rounded-2xl px-4 py-3 font-bold shadow ${
+                          isSelected
+                            ? "bg-slate-900 text-white"
+                            : "bg-white text-slate-700"
+                        }`}
+                      >
+                        {lang === "ko" ? surface.labelKo : surface.labelJa}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="relative z-10 mt-5">
+                <p className="mb-2 text-sm font-bold text-slate-600">{t.sun}</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(sunData).map(([key, sun]) => {
+                    const isSelected = selectedSun === key;
+
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSelectedSun(key as SunType)}
+                        className={`rounded-2xl px-3 py-3 text-sm font-bold shadow ${
+                          isSelected
+                            ? "bg-blue-500 text-white"
+                            : "bg-white text-slate-700"
+                        }`}
+                      >
+                        {lang === "ko" ? sun.labelKo : sun.labelJa}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="relative z-10 mt-5 rounded-3xl bg-amber-50 p-4 shadow-inner">
+                <p className="text-sm font-bold text-amber-700">
+                  {t.recommendedTime}
+                </p>
+                <p className={`${isJapanese ? "text-base" : "text-lg"} mt-1 font-black`}>
+                  {recommendedWalkTime.label}
+                </p>
+                <p className={`${isJapanese ? "text-xs" : "text-sm"} mt-1 text-slate-600`}>
+                  {recommendedWalkTime.detail}
+                </p>
+
+                {previewHours.length > 0 && (
+                  <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+                    {previewHours.map((item) => (
+                      <div key={item.time} className="rounded-xl bg-white p-2">
+                        <p className="font-bold text-slate-700">{item.time}</p>
+                        <p className="text-slate-500">{item.groundTemp}℃</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="h-full min-w-full shrink-0 snap-start overflow-hidden px-2 pb-1">
+            <div className={`relative h-full max-h-full overflow-y-auto overscroll-contain rounded-3xl bg-white/85 shadow-2xl backdrop-blur [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isJapanese ? "p-3 text-[0.84em] leading-tight" : "p-5"}`}>
+              <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/40 opacity-40" />
+
+              <div className="relative z-10 mb-4 rounded-3xl bg-white p-3 shadow">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="text-sm font-black text-slate-700">
+                    {lang === "ko" ? "등록된 강아지" : "登録済みのワンちゃん"}
+                  </p>
+                  <p className="text-xs font-bold text-slate-400">
+                    {dogProfiles.length}/5
+                  </p>
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {dogProfiles.map((profile) => {
+                    const isSelected = dogProfile.id === profile.id;
+
+                    return (
+                      <button
+                        key={profile.id}
+                        type="button"
+                        onClick={() => selectDog(profile.id)}
+                        className={`flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2 text-xs font-black shadow ${
+                          isSelected
+                            ? "bg-slate-900 text-white"
+                            : "bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <img
+                          src={breedData[profile.breed].image}
+                          alt={profile.name}
+                          className="h-8 w-8 rounded-full bg-white object-contain p-1"
+                        />
+                        {profile.name}
+                      </button>
+                    );
+                  })}
+
+                  {dogProfiles.length < 5 && (
+                    <button
+                      type="button"
+                      onClick={startAddDog}
+                      className="shrink-0 rounded-2xl bg-blue-500 px-4 py-2 text-xs font-black text-white shadow"
+                    >
+                      {lang === "ko" ? "+ 추가" : "+ 追加"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="relative z-10 mb-4 rounded-3xl bg-white p-4 shadow">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-black text-slate-700">
+                      {lang === "ko" ? "건강 정보 관리" : "健康情報管理"}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      {lang === "ko"
+                        ? "강아지 기본 정보와 투약·접종 기록을 관리해요."
+                        : "基本情報と投薬・ワクチン記録を管理します。"}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={openHealthEditor}
+                    className="shrink-0 rounded-full bg-blue-500 px-4 py-2 text-xs font-black text-white"
+                  >
+                    {lang === "ko" ? "수정" : "編集"}
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-center gap-4">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
+                    <img
+                      src={breedData[dogProfile.breed].image}
+                      alt={
+                        lang === "ko"
+                          ? breedData[dogProfile.breed].labelKo
+                          : breedData[dogProfile.breed].labelJa
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className={`${isJapanese ? "text-xs" : "text-sm"} leading-5 text-slate-500`}>
+                      {lang === "ko"
+                        ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
+                        : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
+                    </p>
+                    <p className={`${isJapanese ? "text-base" : "text-lg"} mt-1 whitespace-nowrap font-black leading-6`}>
+                      {dogProfile.name}
+                      {t.nowWalkQuestion}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="font-bold text-slate-400">
+                      {lang === "ko" ? "나이" : "年齢"}
+                    </p>
+                    <p className="mt-1 font-black text-slate-700">
+                      {calculateDogAge(dogProfile.birthday, lang)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="font-bold text-slate-400">
+                      {lang === "ko" ? "체중" : "体重"}
+                    </p>
+                    <p className="mt-1 font-black text-slate-700">
+                      {dogProfile.weight
+                        ? `${dogProfile.weight} kg`
+                        : getEmptyText(lang)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="font-bold text-slate-400">
+                      {lang === "ko" ? "성별" : "性別"}
+                    </p>
+                    <p className="mt-1 font-black text-slate-700">
+                      {getSexLabel(dogProfile.sex, lang)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-3">
+                    <p className="font-bold text-slate-400">
+                      {lang === "ko" ? "중성화" : "避妊・去勢"}
+                    </p>
+                    <p className="mt-1 font-black text-slate-700">
+                      {getNeuteredLabel(dogProfile.neutered, lang)}
+                    </p>
+                  </div>
+                </div>
+
+                {(dogProfile.allergies || dogProfile.medicalNotes) && (
+                  <div className="mt-3 rounded-2xl bg-red-50 p-3 text-xs leading-5 text-slate-700">
+                    <p className="font-black text-red-600">
+                      {lang === "ko" ? "주의 정보" : "注意情報"}
+                    </p>
+
+                    {dogProfile.allergies && (
+                      <p className="mt-1">
+                        <span className="font-bold">
+                          {lang === "ko"
+                            ? "알레르기/주의사항: "
+                            : "アレルギー・注意事項: "}
+                        </span>
+                        {dogProfile.allergies}
+                      </p>
+                    )}
+
+                    {dogProfile.medicalNotes && (
+                      <p className="mt-1">
+                        <span className="font-bold">
+                          {lang === "ko" ? "질병/메모: " : "持病・メモ: "}
+                        </span>
+                        {dogProfile.medicalNotes}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {hasAnyHealthRecord(dogProfile) && (
+                  <div className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-slate-700">
+                    <p className="font-black text-blue-700">
+                      {lang === "ko" ? "건강 기록 요약" : "健康記録のまとめ"}
+                    </p>
+
+                    <div className="mt-2 grid grid-cols-1 gap-2">
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                        <span className="font-bold">
+                          {lang === "ko" ? "광견병 다음 접종" : "狂犬病 次回"}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-1 font-black ${
+                            getScheduleStatus(
+                              dogProfile.vaccination?.rabiesNextDate,
+                              lang
+                            ).className
+                          }`}
+                        >
+                          {formatSavedDate(
+                            dogProfile.vaccination?.rabiesNextDate,
+                            lang
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                        <span className="font-bold">
+                          {lang === "ko" ? "혼합백신 다음 접종" : "混合ワクチン 次回"}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-1 font-black ${
+                            getScheduleStatus(
+                              dogProfile.vaccination?.comboNextDate,
+                              lang
+                            ).className
+                          }`}
+                        >
+                          {formatSavedDate(
+                            dogProfile.vaccination?.comboNextDate,
+                            lang
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                        <span className="font-bold">
+                          {lang === "ko" ? "심장사상충약 다음" : "フィラリア薬 次回"}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-1 font-black ${
+                            getScheduleStatus(
+                              dogProfile.medication?.heartwormNextDate,
+                              lang
+                            ).className
+                          }`}
+                        >
+                          {formatSavedDate(
+                            dogProfile.medication?.heartwormNextDate,
+                            lang
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
+                        <span className="font-bold">
+                          {lang === "ko" ? "벼룩, 진드기약 다음" : "ノミ・ダニ薬 次回"}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-1 font-black ${
+                            getScheduleStatus(
+                              dogProfile.medication?.fleaTickNextDate,
+                              lang
+                            ).className
+                          }`}
+                        >
+                          {formatSavedDate(
+                            dogProfile.medication?.fleaTickNextDate,
+                            lang
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {isHealthEditorOpen && (
+                <div className="relative z-10 mb-4 rounded-3xl bg-white p-4 shadow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-700">
+                        {lang === "ko" ? "강아지 건강 정보 관리" : "ワンちゃん健康情報管理"}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        {lang === "ko"
+                          ? "개인 정보, 예방접종, 심장사상충약/벼룩·진드기약 기록을 저장할 수 있어요."
+                          : "基本情報・ワクチン・投薬記録を保存できます。"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsHealthEditorOpen(false)}
+                      className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600"
+                    >
+                      {lang === "ko" ? "닫기" : "閉じる"}
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-3xl bg-slate-50 p-3">
+                      <p className="mb-3 text-sm font-black text-slate-700">
+                        {lang === "ko" ? "5. 강아지 개인 정보" : "5. ワンちゃん基本情報"}
+                      </p>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-bold text-slate-700">
+                            {t.dogName}
+                          </label>
+                          <input
+                            value={dogNameInput}
+                            onChange={(e) => setDogNameInput(e.target.value)}
+                            placeholder={t.dogNamePlaceholder}
+                            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
+                          />
+                        </div>
+
+                        <div>
+                          <p className="mb-2 text-sm font-bold text-slate-700">
+                            {t.breed}
+                          </p>
+                          <select
+                            value={breedInput}
+                            onChange={(e) => setBreedInput(e.target.value as BreedType)}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
+                          >
+                            {Object.entries(breedData).map(([key, breed]) => (
+                              <option key={key} value={key}>
+                                {lang === "ko" ? breed.labelKo : breed.labelJa}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <label className="text-sm font-bold text-slate-700">
+                              {lang === "ko" ? "생일" : "誕生日"}
+                            </label>
+                            <input
+                              type="date"
+                              value={birthdayInput}
+                              onChange={(e) => setBirthdayInput(e.target.value)}
+                              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
+                            />
+                            <p className="mt-1 text-xs text-slate-500">
+                              {lang === "ko"
+                                ? `자동 계산 나이: ${calculateDogAge(
+                                    birthdayInput,
+                                    lang
+                                  )}`
+                                : `自動計算の年齢: ${calculateDogAge(
+                                    birthdayInput,
+                                    lang
+                                  )}`}
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-bold text-slate-700">
+                              {lang === "ko" ? "체중 kg" : "体重 kg"}
+                            </label>
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              value={weightInput}
+                              onChange={(e) => setWeightInput(e.target.value)}
+                              placeholder={lang === "ko" ? "예: 5.2" : "例：5.2"}
+                              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="mb-2 text-sm font-bold text-slate-700">
+                            {lang === "ko" ? "성별" : "性別"}
+                          </p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { value: "unknown", ko: "미입력", ja: "未入力" },
+                              { value: "male", ko: "남아", ja: "男の子" },
+                              { value: "female", ko: "여아", ja: "女の子" },
+                            ].map((item) => (
+                              <button
+                                key={item.value}
+                                type="button"
+                                onClick={() => setSexInput(item.value as DogSex)}
+                                className={`rounded-2xl px-3 py-3 text-sm font-black shadow ${
+                                  sexInput === item.value
+                                    ? "bg-blue-500 text-white"
+                                    : "bg-white text-slate-700"
+                                }`}
+                              >
+                                {lang === "ko" ? item.ko : item.ja}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="mb-2 text-sm font-bold text-slate-700">
+                            {lang === "ko" ? "중성화 여부" : "避妊・去勢"}
+                          </p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { value: "unknown", ko: "미입력", ja: "未入力" },
+                              { value: "yes", ko: "완료", ja: "済み" },
+                              { value: "no", ko: "미완료", ja: "未実施" },
+                            ].map((item) => (
+                              <button
+                                key={item.value}
+                                type="button"
+                                onClick={() =>
+                                  setNeuteredInput(item.value as NeuteredStatus)
+                                }
+                                className={`rounded-2xl px-3 py-3 text-sm font-black shadow ${
+                                  neuteredInput === item.value
+                                    ? "bg-slate-900 text-white"
+                                    : "bg-white text-slate-700"
+                                }`}
+                              >
+                                {lang === "ko" ? item.ko : item.ja}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-slate-700">
+                            {lang === "ko" ? "주의해야 할 질병 / 알레르기" : "持病・アレルギー"}
+                          </label>
+                          <textarea
+                            value={allergyInput}
+                            onChange={(e) => setAllergyInput(e.target.value)}
+                            placeholder={
+                              lang === "ko"
+                                ? "예: 닭고기 알레르기, 더위에 약함"
+                                : "例：鶏肉アレルギー、暑さに弱い"
+                            }
+                            className="mt-2 min-h-16 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold outline-none focus:border-blue-400"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-slate-700">
+                            {lang === "ko" ? "추가 메모" : "追加メモ"}
+                          </label>
+                          <textarea
+                            value={medicalNoteInput}
+                            onChange={(e) => setMedicalNoteInput(e.target.value)}
+                            placeholder={
+                              lang === "ko"
+                                ? "예: 슬개골 주의, 심장질환, 피부질환 등"
+                                : "例：膝蓋骨に注意、心疾患、皮膚疾患など"
+                            }
+                            className="mt-2 min-h-16 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold outline-none focus:border-blue-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-3xl bg-blue-50 p-3">
+                      <p className="mb-3 text-sm font-black text-slate-700">
+                        {lang === "ko" ? "6. 예방접종 기록" : "6. ワクチン記録"}
+                      </p>
+
+                      <div className="space-y-3">
+                        <div className="rounded-2xl bg-white p-3">
+                          <p className="text-sm font-black text-slate-700">
+                            {lang === "ko" ? "광견병" : "狂犬病"}
+                          </p>
+                          <div className="mt-3 grid grid-cols-1 gap-3">
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "마지막 접종 날짜" : "最後の接種日"}
+                              <input
+                                type="date"
+                                value={rabiesLastInput}
+                                onChange={(e) => setRabiesLastInput(e.target.value)}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "다음 접종 예정일" : "次回予定日"}
+                              <input
+                                type="date"
+                                value={rabiesNextInput}
+                                onChange={(e) => setRabiesNextInput(e.target.value)}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3">
+                          <p className="text-sm font-black text-slate-700">
+                            {lang === "ko" ? "혼합백신" : "混合ワクチン"}
+                          </p>
+                          <div className="mt-3 grid grid-cols-1 gap-3">
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "마지막 접종 날짜" : "最後の接種日"}
+                              <input
+                                type="date"
+                                value={comboLastInput}
+                                onChange={(e) => setComboLastInput(e.target.value)}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "다음 접종 예정일" : "次回予定日"}
+                              <input
+                                type="date"
+                                value={comboNextInput}
+                                onChange={(e) => setComboNextInput(e.target.value)}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3">
+                          <p className="text-sm font-black text-slate-700">
+                            {lang === "ko" ? "기타 백신" : "その他ワクチン"}
+                          </p>
+                          <div className="mt-3 grid grid-cols-1 gap-3">
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "백신 이름" : "ワクチン名"}
+                              <input
+                                value={otherVaccineNameInput}
+                                onChange={(e) =>
+                                  setOtherVaccineNameInput(e.target.value)
+                                }
+                                placeholder={lang === "ko" ? "예: 켄넬코프" : "例：ケンネルコフ"}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "마지막 접종 날짜" : "最後の接種日"}
+                              <input
+                                type="date"
+                                value={otherVaccineLastInput}
+                                onChange={(e) =>
+                                  setOtherVaccineLastInput(e.target.value)
+                                }
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "다음 접종 예정일" : "次回予定日"}
+                              <input
+                                type="date"
+                                value={otherVaccineNextInput}
+                                onChange={(e) =>
+                                  setOtherVaccineNextInput(e.target.value)
+                                }
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-3xl bg-amber-50 p-3">
+                      <p className="mb-3 text-sm font-black text-slate-700">
+                        {lang === "ko"
+                          ? "7. 심장사상충약 / 벼룩, 진드기약 기록"
+                          : "7. フィラリア薬・ノミダニ薬記録"}
+                      </p>
+
+                      <div className="space-y-3">
+                        <div className="rounded-2xl bg-white p-3">
+                          <p className="text-sm font-black text-slate-700">
+                            {lang === "ko" ? "심장사상충약" : "フィラリア薬"}
+                          </p>
+                          <div className="mt-3 grid grid-cols-1 gap-3">
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "약 종류" : "薬の種類"}
+                              <input
+                                value={heartwormMedicineInput}
+                                onChange={(e) =>
+                                  setHeartwormMedicineInput(e.target.value)
+                                }
+                                placeholder={lang === "ko" ? "예: 넥스가드 스펙트라" : "例：ネクスガードスペクトラ"}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "마지막 투약일" : "最後の投薬日"}
+                              <input
+                                type="date"
+                                value={heartwormLastInput}
+                                onChange={(e) =>
+                                  setHeartwormLastInput(e.target.value)
+                                }
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "다음 투약일" : "次回投薬日"}
+                              <input
+                                type="date"
+                                value={heartwormNextInput}
+                                onChange={(e) =>
+                                  setHeartwormNextInput(e.target.value)
+                                }
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3">
+                          <p className="text-sm font-black text-slate-700">
+                            {lang === "ko" ? "벼룩, 진드기약" : "ノミ・ダニ薬"}
+                          </p>
+                          <div className="mt-3 grid grid-cols-1 gap-3">
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "약 종류" : "薬の種類"}
+                              <input
+                                value={fleaTickMedicineInput}
+                                onChange={(e) =>
+                                  setFleaTickMedicineInput(e.target.value)
+                                }
+                                placeholder={lang === "ko" ? "예: 브라벡토, 프론트라인" : "例：ブラベクト、フロントライン"}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "마지막 투약일" : "最後の投薬日"}
+                              <input
+                                type="date"
+                                value={fleaTickLastInput}
+                                onChange={(e) => setFleaTickLastInput(e.target.value)}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                            <label className="text-xs font-bold text-slate-600">
+                              {lang === "ko" ? "다음 투약일" : "次回投薬日"}
+                              <input
+                                type="date"
+                                value={fleaTickNextInput}
+                                onChange={(e) => setFleaTickNextInput(e.target.value)}
+                                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <label className="flex items-center gap-3 rounded-2xl bg-white p-3 text-sm font-black text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={reminderEnabledInput}
+                            onChange={(e) =>
+                              setReminderEnabledInput(e.target.checked)
+                            }
+                            className="h-5 w-5"
+                          />
+                          {lang === "ko"
+                            ? "앱 안에서 알림 표시"
+                            : "アプリ内でお知らせ表示"}
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={saveHealthProfile}
+                        className="rounded-2xl bg-blue-500 px-4 py-3 text-sm font-black text-white shadow-lg"
+                      >
+                        {lang === "ko" ? "저장" : "保存"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsHealthEditorOpen(false)}
+                        className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 shadow"
+                      >
+                        {lang === "ko" ? "취소" : "キャンセル"}
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={deleteActiveDog}
+                      className="w-full rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-600 shadow"
+                    >
+                      {lang === "ko" ? "이 강아지 정보 삭제" : "このワンちゃん情報を削除"}
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="relative z-10 mb-5 rounded-3xl bg-white p-4 shadow">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
-                  <img
-                    src={breedData[dogProfile.breed].image}
-                    alt={
-                      lang === "ko"
-                        ? breedData[dogProfile.breed].labelKo
-                        : breedData[dogProfile.breed].labelJa
-                    }
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+          <section className="h-full min-w-full shrink-0 snap-start overflow-hidden px-2 pb-1">
+            <div className={`relative flex h-full max-h-full flex-col overflow-hidden rounded-3xl bg-white/85 shadow-2xl backdrop-blur ${isJapanese ? "p-2.5 text-[0.76em] leading-tight" : "p-3.5"}`}>
+              <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/40 opacity-40" />
 
-                <div className="min-w-0">
-                  <p className="text-sm text-slate-500">
-                    {lang === "ko"
-                      ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
-                      : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
-                  </p>
-                  <p className="whitespace-nowrap text-lg font-black">
-                    {dogProfile.name}
-                    {t.nowWalkQuestion}
-                  </p>
-                </div>
-              </div>
+              <div className="relative z-10 grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] gap-2">
+                <div className="rounded-3xl bg-white p-3 shadow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-slate-700">{t.handTest}</p>
+                      <p className={`${isJapanese ? "text-[10px] leading-4" : "text-[11px] leading-4"} mt-1 text-slate-500`}>
+                        {t.handTestDesc}
+                      </p>
+                    </div>
 
-              <button
-                type="button"
-                onClick={openHealthEditor}
-                className="shrink-0 rounded-full bg-blue-500 px-4 py-2 text-xs font-black text-white"
-              >
-                {lang === "ko" ? "건강 정보 관리" : "健康情報管理"}
-              </button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="font-bold text-slate-400">
-                  {lang === "ko" ? "나이" : "年齢"}
-                </p>
-                <p className="mt-1 font-black text-slate-700">
-                  {calculateDogAge(dogProfile.birthday, lang)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="font-bold text-slate-400">
-                  {lang === "ko" ? "체중" : "体重"}
-                </p>
-                <p className="mt-1 font-black text-slate-700">
-                  {dogProfile.weight
-                    ? `${dogProfile.weight} kg`
-                    : getEmptyText(lang)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="font-bold text-slate-400">
-                  {lang === "ko" ? "성별" : "性別"}
-                </p>
-                <p className="mt-1 font-black text-slate-700">
-                  {getSexLabel(dogProfile.sex, lang)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="font-bold text-slate-400">
-                  {lang === "ko" ? "중성화" : "避妊・去勢"}
-                </p>
-                <p className="mt-1 font-black text-slate-700">
-                  {getNeuteredLabel(dogProfile.neutered, lang)}
-                </p>
-              </div>
-            </div>
-
-            {(dogProfile.allergies || dogProfile.medicalNotes) && (
-              <div className="mt-3 rounded-2xl bg-red-50 p-3 text-xs leading-5 text-slate-700">
-                <p className="font-black text-red-600">
-                  {lang === "ko" ? "주의 정보" : "注意情報"}
-                </p>
-
-                {dogProfile.allergies && (
-                  <p className="mt-1">
-                    <span className="font-bold">
-                      {lang === "ko"
-                        ? "알레르기/주의사항: "
-                        : "アレルギー・注意事項: "}
-                    </span>
-                    {dogProfile.allergies}
-                  </p>
-                )}
-
-                {dogProfile.medicalNotes && (
-                  <p className="mt-1">
-                    <span className="font-bold">
-                      {lang === "ko" ? "질병/메모: " : "持病・メモ: "}
-                    </span>
-                    {dogProfile.medicalNotes}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {hasAnyHealthRecord(dogProfile) && (
-              <div className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-slate-700">
-                <p className="font-black text-blue-700">
-                  {lang === "ko" ? "건강 기록 요약" : "健康記録のまとめ"}
-                </p>
-
-                <div className="mt-2 grid grid-cols-1 gap-2">
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span className="font-bold">
-                      {lang === "ko" ? "광견병 다음 접종" : "狂犬病 次回"}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-1 font-black ${
-                        getScheduleStatus(
-                          dogProfile.vaccination?.rabiesNextDate,
-                          lang
-                        ).className
-                      }`}
-                    >
-                      {formatSavedDate(
-                        dogProfile.vaccination?.rabiesNextDate,
-                        lang
-                      )}
-                    </span>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-100 text-2xl font-black text-blue-600">
+                      {timer}
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span className="font-bold">
-                      {lang === "ko" ? "혼합백신 다음 접종" : "混合ワクチン 次回"}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-1 font-black ${
-                        getScheduleStatus(
-                          dogProfile.vaccination?.comboNextDate,
-                          lang
-                        ).className
-                      }`}
-                    >
-                      {formatSavedDate(
-                        dogProfile.vaccination?.comboNextDate,
-                        lang
-                      )}
-                    </span>
-                  </div>
+                  {isTimerRunning && (
+                    <p className="mt-2 text-center text-xs font-bold text-blue-600">
+                      {t.handTestRunning}
+                    </p>
+                  )}
 
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span className="font-bold">
-                      {lang === "ko" ? "심장사상충약 다음" : "フィラリア薬 次回"}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-1 font-black ${
-                        getScheduleStatus(
-                          dogProfile.medication?.heartwormNextDate,
-                          lang
-                        ).className
-                      }`}
-                    >
-                      {formatSavedDate(
-                        dogProfile.medication?.heartwormNextDate,
-                        lang
-                      )}
-                    </span>
-                  </div>
+                  {timerFinished && (
+                    <p className="mt-2 rounded-2xl bg-green-100 px-3 py-2 text-center text-xs font-bold leading-4 text-green-700">
+                      {t.handTestDone}
+                    </p>
+                  )}
 
-                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2">
-                    <span className="font-bold">
-                      {lang === "ko" ? "벼룩, 진드기약 다음" : "ノミ・ダニ薬 次回"}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-1 font-black ${
-                        getScheduleStatus(
-                          dogProfile.medication?.fleaTickNextDate,
-                          lang
-                        ).className
-                      }`}
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={startTimer}
+                      disabled={isTimerRunning}
+                      className="rounded-2xl bg-blue-500 px-3 py-2 text-sm font-black text-white shadow-lg disabled:bg-slate-300"
                     >
-                      {formatSavedDate(
-                        dogProfile.medication?.fleaTickNextDate,
-                        lang
-                      )}
-                    </span>
+                      {t.timerStart}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetTimer}
+                      className="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-black text-slate-700 shadow"
+                    >
+                      {t.timerReset}
+                    </button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
 
-          {isHealthEditorOpen && (
-            <div className="relative z-10 mb-5 rounded-3xl bg-white p-4 shadow">
-              <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="rounded-3xl bg-slate-50 p-3 shadow">
                   <p className="text-sm font-black text-slate-700">
-                    {lang === "ko" ? "강아지 건강 정보 관리" : "ワンちゃん健康情報管理"}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    {lang === "ko"
-                      ? "개인 정보, 예방접종, 심장사상충약/벼룩·진드기약 기록을 저장할 수 있어요."
-                      : "基本情報、ワクチン、フィラリア薬・ノミダニ薬の記録を保存できます。"}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsHealthEditorOpen(false)}
-                  className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600"
-                >
-                  {lang === "ko" ? "닫기" : "閉じる"}
-                </button>
-              </div>
-
-              <div className="mt-5 space-y-5">
-                <div className="rounded-3xl bg-slate-50 p-4">
-                  <p className="mb-3 text-sm font-black text-slate-700">
-                    {lang === "ko" ? "5. 강아지 개인 정보" : "5. ワンちゃん基本情報"}
+                    {t.tempGuideTitle}
                   </p>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-bold text-slate-700">
-                        {t.dogName}
-                      </label>
-                      <input
-                        value={dogNameInput}
-                        onChange={(e) => setDogNameInput(e.target.value)}
-                        placeholder={t.dogNamePlaceholder}
-                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
-                      />
+                  <div className="mt-2 space-y-1 text-[11px] font-bold leading-4">
+                    <div className="flex justify-between rounded-xl bg-green-100 px-3 py-1 text-green-800">
+                      <span>{lang === "ko" ? "35℃ 이하" : "35℃以下"}</span>
+                      <span>{lang === "ko" ? "산책 가능" : "お散歩可能"}</span>
                     </div>
-
-                    <div>
-                      <p className="mb-2 text-sm font-bold text-slate-700">
-                        {t.breed}
-                      </p>
-                      <select
-                        value={breedInput}
-                        onChange={(e) => setBreedInput(e.target.value as BreedType)}
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
-                      >
-                        {Object.entries(breedData).map(([key, breed]) => (
-                          <option key={key} value={key}>
-                            {lang === "ko" ? breed.labelKo : breed.labelJa}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="flex justify-between rounded-xl bg-yellow-100 px-3 py-1 text-yellow-800">
+                      <span>36–40℃</span>
+                      <span>{lang === "ko" ? "짧게 가능" : "短めなら可能"}</span>
                     </div>
-
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="text-sm font-bold text-slate-700">
-                          {lang === "ko" ? "생일" : "誕生日"}
-                        </label>
-                        <input
-                          type="date"
-                          value={birthdayInput}
-                          onChange={(e) => setBirthdayInput(e.target.value)}
-                          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
-                        />
-                        <p className="mt-1 text-xs text-slate-500">
-                          {lang === "ko"
-                            ? `자동 계산 나이: ${calculateDogAge(
-                                birthdayInput,
-                                lang
-                              )}`
-                            : `自動計算の年齢: ${calculateDogAge(
-                                birthdayInput,
-                                lang
-                              )}`}
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-bold text-slate-700">
-                          {lang === "ko" ? "체중 kg" : "体重 kg"}
-                        </label>
-                        <input
-                          type="number"
-                          inputMode="decimal"
-                          value={weightInput}
-                          onChange={(e) => setWeightInput(e.target.value)}
-                          placeholder={lang === "ko" ? "예: 5.2" : "例：5.2"}
-                          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
-                        />
-                      </div>
+                    <div className="flex justify-between rounded-xl bg-orange-100 px-3 py-1 text-orange-800">
+                      <span>41–45℃</span>
+                      <span>{lang === "ko" ? "주의 필요" : "注意が必要"}</span>
                     </div>
-
-                    <div>
-                      <p className="mb-2 text-sm font-bold text-slate-700">
-                        {lang === "ko" ? "성별" : "性別"}
-                      </p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { value: "unknown", ko: "미입력", ja: "未入力" },
-                          { value: "male", ko: "남아", ja: "男の子" },
-                          { value: "female", ko: "여아", ja: "女の子" },
-                        ].map((item) => (
-                          <button
-                            key={item.value}
-                            type="button"
-                            onClick={() => setSexInput(item.value as DogSex)}
-                            className={`rounded-2xl px-3 py-3 text-sm font-black shadow ${
-                              sexInput === item.value
-                                ? "bg-blue-500 text-white"
-                                : "bg-white text-slate-700"
-                            }`}
-                          >
-                            {lang === "ko" ? item.ko : item.ja}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="flex justify-between rounded-xl bg-red-100 px-3 py-1 text-red-700">
+                      <span>46–50℃</span>
+                      <span>{lang === "ko" ? "위험" : "危険"}</span>
                     </div>
-
-                    <div>
-                      <p className="mb-2 text-sm font-bold text-slate-700">
-                        {lang === "ko" ? "중성화 여부" : "避妊・去勢"}
-                      </p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { value: "unknown", ko: "미입력", ja: "未入力" },
-                          { value: "yes", ko: "완료", ja: "済み" },
-                          { value: "no", ko: "미완료", ja: "未実施" },
-                        ].map((item) => (
-                          <button
-                            key={item.value}
-                            type="button"
-                            onClick={() =>
-                              setNeuteredInput(item.value as NeuteredStatus)
-                            }
-                            className={`rounded-2xl px-3 py-3 text-sm font-black shadow ${
-                              neuteredInput === item.value
-                                ? "bg-slate-900 text-white"
-                                : "bg-white text-slate-700"
-                            }`}
-                          >
-                            {lang === "ko" ? item.ko : item.ja}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-bold text-slate-700">
-                        {lang === "ko" ? "주의해야 할 질병 / 알레르기" : "持病・アレルギー"}
-                      </label>
-                      <textarea
-                        value={allergyInput}
-                        onChange={(e) => setAllergyInput(e.target.value)}
-                        placeholder={
-                          lang === "ko"
-                            ? "예: 닭고기 알레르기, 더위에 약함"
-                            : "例：鶏肉アレルギー、暑さに弱い"
-                        }
-                        className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-400"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-bold text-slate-700">
-                        {lang === "ko" ? "추가 메모" : "追加メモ"}
-                      </label>
-                      <textarea
-                        value={medicalNoteInput}
-                        onChange={(e) => setMedicalNoteInput(e.target.value)}
-                        placeholder={
-                          lang === "ko"
-                            ? "예: 슬개골 주의, 심장질환, 피부질환 등"
-                            : "例：膝蓋骨に注意、心疾患、皮膚疾患など"
-                        }
-                        className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-400"
-                      />
+                    <div className="flex justify-between rounded-xl bg-zinc-200 px-3 py-1 text-zinc-800">
+                      <span>{lang === "ko" ? "50℃ 이상" : "50℃以上"}</span>
+                      <span>{lang === "ko" ? "산책 피하기" : "お散歩を避ける"}</span>
                     </div>
                   </div>
-                </div>
 
-                <div className="rounded-3xl bg-blue-50 p-4">
-                  <p className="mb-3 text-sm font-black text-slate-700">
-                    {lang === "ko" ? "6. 예방접종 기록" : "6. ワクチン記録"}
+                  <p className="mt-2 line-clamp-2 text-[10px] leading-4 text-slate-500">
+                    {t.guideSourceNote}
                   </p>
 
-                  <div className="space-y-4">
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "광견병" : "狂犬病"}
+                  <details className="mt-2 rounded-2xl bg-white px-3 py-2 text-[10px] leading-4 text-slate-600">
+                    <summary className="cursor-pointer font-bold text-slate-700">
+                      {t.cautionTitle}
+                    </summary>
+                    <p className="mt-1">{t.cautionMain}</p>
+                    <p className="mt-1">{t.cautionSub}</p>
+                  </details>
+                </div>
+
+                <div className="min-h-0 overflow-hidden rounded-3xl bg-white p-3 shadow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-slate-700">{t.shareTitle}</p>
+                      <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500">
+                        {t.shareDescription}
                       </p>
-                      <div className="mt-3 grid grid-cols-1 gap-3">
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "마지막 접종 날짜" : "最後の接種日"}
-                          <input
-                            type="date"
-                            value={rabiesLastInput}
-                            onChange={(e) => setRabiesLastInput(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "다음 접종 예정일" : "次回予定日"}
-                          <input
-                            type="date"
-                            value={rabiesNextInput}
-                            onChange={(e) => setRabiesNextInput(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                      </div>
                     </div>
 
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "혼합백신" : "混合ワクチン"}
-                      </p>
-                      <div className="mt-3 grid grid-cols-1 gap-3">
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "마지막 접종 날짜" : "最後の接種日"}
-                          <input
-                            type="date"
-                            value={comboLastInput}
-                            onChange={(e) => setComboLastInput(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "다음 접종 예정일" : "次回予定日"}
-                          <input
-                            type="date"
-                            value={comboNextInput}
-                            onChange={(e) => setComboNextInput(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "기타 백신" : "その他ワクチン"}
-                      </p>
-                      <div className="mt-3 grid grid-cols-1 gap-3">
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "백신 이름" : "ワクチン名"}
-                          <input
-                            value={otherVaccineNameInput}
-                            onChange={(e) =>
-                              setOtherVaccineNameInput(e.target.value)
-                            }
-                            placeholder={lang === "ko" ? "예: 켄넬코프" : "例：ケンネルコフ"}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "마지막 접종 날짜" : "最後の接種日"}
-                          <input
-                            type="date"
-                            value={otherVaccineLastInput}
-                            onChange={(e) =>
-                              setOtherVaccineLastInput(e.target.value)
-                            }
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "다음 접종 예정일" : "次回予定日"}
-                          <input
-                            type="date"
-                            value={otherVaccineNextInput}
-                            onChange={(e) =>
-                              setOtherVaccineNextInput(e.target.value)
-                            }
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                      </div>
-                    </div>
+                    <img
+                      src={qrCodeUrl}
+                      alt="QR code"
+                      className="h-16 w-16 shrink-0 rounded-2xl bg-slate-50 p-1.5 shadow"
+                    />
                   </div>
-                </div>
 
-                <div className="rounded-3xl bg-amber-50 p-4">
-                  <p className="mb-3 text-sm font-black text-slate-700">
-                    {lang === "ko"
-                      ? "7. 심장사상충약 / 벼룩, 진드기약 기록"
-                      : "7. フィラリア薬・ノミダニ薬記録"}
+                  <p className="mt-2 truncate text-center text-[10px] font-bold text-blue-600">
+                    {APP_URL}
                   </p>
 
-                  <div className="space-y-4">
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "심장사상충약" : "フィラリア薬"}
-                      </p>
-                      <div className="mt-3 grid grid-cols-1 gap-3">
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "약 종류" : "薬の種類"}
-                          <input
-                            value={heartwormMedicineInput}
-                            onChange={(e) =>
-                              setHeartwormMedicineInput(e.target.value)
-                            }
-                            placeholder={lang === "ko" ? "예: 넥스가드 스펙트라" : "例：ネクスガードスペクトラ"}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "마지막 투약일" : "最後の投薬日"}
-                          <input
-                            type="date"
-                            value={heartwormLastInput}
-                            onChange={(e) =>
-                              setHeartwormLastInput(e.target.value)
-                            }
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "다음 투약일" : "次回投薬日"}
-                          <input
-                            type="date"
-                            value={heartwormNextInput}
-                            onChange={(e) =>
-                              setHeartwormNextInput(e.target.value)
-                            }
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-3">
-                      <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "벼룩, 진드기약" : "ノミ・ダニ薬"}
-                      </p>
-                      <div className="mt-3 grid grid-cols-1 gap-3">
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "약 종류" : "薬の種類"}
-                          <input
-                            value={fleaTickMedicineInput}
-                            onChange={(e) =>
-                              setFleaTickMedicineInput(e.target.value)
-                            }
-                            placeholder={lang === "ko" ? "예: 브라벡토, 프론트라인" : "例：ブラベクト、フロントライン"}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "마지막 투약일" : "最後の投薬日"}
-                          <input
-                            type="date"
-                            value={fleaTickLastInput}
-                            onChange={(e) => setFleaTickLastInput(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-slate-600">
-                          {lang === "ko" ? "다음 투약일" : "次回投薬日"}
-                          <input
-                            type="date"
-                            value={fleaTickNextInput}
-                            onChange={(e) => setFleaTickNextInput(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 font-bold outline-none focus:border-blue-400"
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <label className="flex items-center gap-3 rounded-2xl bg-white p-3 text-sm font-black text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={reminderEnabledInput}
-                        onChange={(e) =>
-                          setReminderEnabledInput(e.target.checked)
-                        }
-                        className="h-5 w-5"
-                      />
-                      {lang === "ko"
-                        ? "앱 안에서 알림 표시"
-                        : "アプリ内でお知らせ表示"}
-                    </label>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={copyShareText}
+                      className="rounded-2xl bg-slate-900 px-3 py-2 text-xs font-black text-white shadow"
+                    >
+                      {t.copyIntro}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={shareApp}
+                      className="rounded-2xl bg-blue-500 px-3 py-2 text-xs font-black text-white shadow"
+                    >
+                      {t.shareButton}
+                    </button>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={saveHealthProfile}
-                    className="rounded-2xl bg-blue-500 px-4 py-4 text-base font-black text-white shadow-lg"
-                  >
-                    {lang === "ko" ? "저장" : "保存"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsHealthEditorOpen(false)}
-                    className="rounded-2xl bg-slate-100 px-4 py-4 text-base font-black text-slate-700 shadow"
-                  >
-                    {lang === "ko" ? "취소" : "キャンセル"}
-                  </button>
-                </div>
+                  {copyStatus && (
+                    <p className="mt-2 text-center text-xs font-bold text-blue-600">
+                      {copyStatus}
+                    </p>
+                  )}
 
-                <button
-                  type="button"
-                  onClick={deleteActiveDog}
-                  className="w-full rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-600 shadow"
-                >
-                  {lang === "ko" ? "이 강아지 정보 삭제" : "このワンちゃん情報を削除"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="relative z-10 mb-5 rounded-2xl bg-white p-4 shadow">
-            <p className="text-sm font-bold text-slate-700">
-              {t.locationWeather}
-            </p>
-            <p className="mt-1 text-sm text-slate-500">{locationText}</p>
-            <p className="mt-1 text-sm text-slate-500">{weatherStatusText}</p>
-
-            {isLoadingWeather && (
-              <p className="mt-2 text-sm font-semibold text-blue-500">
-                {t.loading}
-              </p>
-            )}
-          </div>
-
-          <div className="relative z-10 rounded-3xl bg-blue-50 p-5 shadow-inner">
-            <p className="text-sm text-slate-500">{t.currentTemp}</p>
-            <div className="mt-1 flex items-end gap-2">
-              <span className="text-3xl font-black">{airTemperature}</span>
-              <span className="mb-1 text-lg font-semibold">℃</span>
-            </div>
-
-            {weather && (
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs text-slate-600">
-                <div className="rounded-xl bg-white p-2">
-                  <p className="font-bold">{t.wind}</p>
-                  <p>{weather.windSpeed} km/h</p>
-                </div>
-                <div className="rounded-xl bg-white p-2">
-                  <p className="font-bold">{t.cloud}</p>
-                  <p>{weather.cloudCover}%</p>
-                </div>
-                <div className="rounded-xl bg-white p-2">
-                  <p className="font-bold">{t.radiation}</p>
-                  <p>{weather.radiation} W/m²</p>
-                </div>
-                <div className="rounded-xl bg-white p-2">
-                  <p className="font-bold">{t.uvIndex}</p>
-                  <p>
-                    {weather.uvIndex !== undefined
-                      ? `${weather.uvIndex} · ${getUvLabel(weather.uvIndex, lang)}`
-                      : "-"}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white p-2">
-                  <p className="font-bold">{t.airQuality}</p>
-                  <p>
-                    {weather.airQualityIndex !== undefined
-                      ? `${getAirQualityLabel(weather.airQualityIndex, lang)}`
-                      : "-"}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white p-2">
-                  <p className="font-bold">{t.pm25}</p>
-                  <p>
-                    {weather.pm25 !== undefined ? `${weather.pm25} µg/m³` : "-"}
-                  </p>
+                  <details className="mt-2 rounded-2xl bg-blue-50 px-3 py-2 text-[10px] leading-4 text-slate-600">
+                    <summary className="cursor-pointer font-bold text-slate-700">
+                      {lang === "ko" ? "공유용 소개문 보기" : "紹介文を見る"}
+                    </summary>
+                    <p className="mt-1 whitespace-pre-line">{getShareText(lang)}</p>
+                  </details>
                 </div>
               </div>
-            )}
-
-            <p className="mt-5 text-sm text-slate-500">
-              {t.groundTemp} ·{" "}
-              {lang === "ko" ? currentSurface.labelKo : currentSurface.labelJa} ·{" "}
-              {lang === "ko" ? currentSun.labelKo : currentSun.labelJa}
-            </p>
-
-            <div className="mt-2 flex items-end gap-2">
-              <span className="text-7xl font-black">{groundTemperature}</span>
-              <span className="mb-3 text-2xl font-semibold">℃</span>
             </div>
+          </section>
+        </div>
 
-            <p
-              className={`mt-3 rounded-full px-4 py-3 text-center font-black ${risk.className}`}
-            >
-              {risk.label}
-            </p>
-          </div>
-
-          <div className="relative z-10 mt-5">
-            <p className="mb-2 text-sm font-bold text-slate-600">
-              {t.surface}
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(surfaceData).map(([key, surface]) => {
-                const isSelected = selectedSurface === key;
-
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setSelectedSurface(key as SurfaceType)}
-                    className={`rounded-2xl px-4 py-3 font-bold shadow ${
-                      isSelected
-                        ? "bg-slate-900 text-white"
-                        : "bg-white text-slate-700"
-                    }`}
-                  >
-                    {lang === "ko" ? surface.labelKo : surface.labelJa}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="relative z-10 mt-5">
-            <p className="mb-2 text-sm font-bold text-slate-600">{t.sun}</p>
-            <div className="grid grid-cols-3 gap-3">
-              {Object.entries(sunData).map(([key, sun]) => {
-                const isSelected = selectedSun === key;
-
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setSelectedSun(key as SunType)}
-                    className={`rounded-2xl px-3 py-3 text-sm font-bold shadow ${
-                      isSelected
-                        ? "bg-blue-500 text-white"
-                        : "bg-white text-slate-700"
-                    }`}
-                  >
-                    {lang === "ko" ? sun.labelKo : sun.labelJa}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="relative z-10 mt-5 rounded-3xl bg-amber-50 p-4 shadow-inner">
-            <p className="text-sm font-bold text-amber-700">
-              {t.recommendedTime}
-            </p>
-            <p className="mt-1 text-lg font-black">
-              {recommendedWalkTime.label}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">
-              {recommendedWalkTime.detail}
-            </p>
-
-            {previewHours.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-                {previewHours.map((item) => (
-                  <div key={item.time} className="rounded-xl bg-white p-2">
-                    <p className="font-bold text-slate-700">{item.time}</p>
-                    <p className="text-slate-500">{item.groundTemp}℃</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="relative z-10 mt-5 rounded-3xl bg-white p-4 shadow">
-            <p className="text-sm font-bold text-slate-700">{t.handTest}</p>
-            <p className="mt-1 text-sm text-slate-500">{t.handTestDesc}</p>
-
-            <div className="mt-4 flex items-center justify-center">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-4xl font-black text-blue-600">
-                {timer}
-              </div>
-            </div>
-
-            {isTimerRunning && (
-              <p className="mt-3 text-center text-sm font-bold text-blue-600">
-                {t.handTestRunning}
-              </p>
-            )}
-
-            {timerFinished && (
-              <p className="mt-3 rounded-2xl bg-green-100 px-4 py-3 text-center text-sm font-bold text-green-700">
-                {t.handTestDone}
-              </p>
-            )}
-
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={startTimer}
-                disabled={isTimerRunning}
-                className="rounded-2xl bg-blue-500 px-4 py-4 text-base font-black text-white shadow-lg disabled:bg-slate-300"
-              >
-                {t.timerStart}
-              </button>
-              <button
-                type="button"
-                onClick={resetTimer}
-                className="rounded-2xl bg-slate-100 px-4 py-4 text-base font-black text-slate-700 shadow"
-              >
-                {t.timerReset}
-              </button>
-            </div>
-          </div>
-
-          <div className="relative z-10 mt-5 rounded-3xl bg-slate-50 p-4 shadow">
-            <p className="text-sm font-black text-slate-700">
-              {t.tempGuideTitle}
-            </p>
-
-            <div className="mt-3 space-y-2 text-sm">
-              <div className="flex justify-between rounded-2xl bg-green-100 px-3 py-2 text-green-800">
-                <span>{lang === "ko" ? "35℃ 이하" : "35℃以下"}</span>
-                <span>{lang === "ko" ? "산책 가능" : "お散歩可能"}</span>
-              </div>
-              <div className="flex justify-between rounded-2xl bg-yellow-100 px-3 py-2 text-yellow-800">
-                <span>36–40℃</span>
-                <span>{lang === "ko" ? "짧게 가능" : "短めなら可能"}</span>
-              </div>
-              <div className="flex justify-between rounded-2xl bg-orange-100 px-3 py-2 text-orange-800">
-                <span>41–45℃</span>
-                <span>{lang === "ko" ? "주의 필요" : "注意が必要"}</span>
-              </div>
-              <div className="flex justify-between rounded-2xl bg-red-100 px-3 py-2 text-red-700">
-                <span>46–50℃</span>
-                <span>{lang === "ko" ? "위험" : "危険"}</span>
-              </div>
-              <div className="flex justify-between rounded-2xl bg-zinc-200 px-3 py-2 text-zinc-800">
-                <span>{lang === "ko" ? "50℃ 이상" : "50℃以上"}</span>
-                <span>{lang === "ko" ? "산책 피하기" : "お散歩を避ける"}</span>
-              </div>
-            </div>
-
-            <p className="mt-3 text-[11px] leading-5 text-slate-500">
-              {t.guideSourceNote}
-            </p>
-
-            <div className="mt-4 rounded-2xl bg-white px-4 py-3 text-xs leading-5 text-slate-600">
-              <p className="font-bold text-slate-700">{t.cautionTitle}</p>
-              <p className="mt-1">{t.cautionMain}</p>
-              <p className="mt-1">{t.cautionSub}</p>
-            </div>
-          </div>
-               
-          <div className="relative z-10 mt-5 rounded-3xl bg-white p-4 shadow">
-            <p className="text-sm font-black text-slate-700">{t.shareTitle}</p>
-            <p className="mt-1 text-sm text-slate-500">{t.shareDescription}</p>
-
-            <div className="mt-4 flex flex-col items-center rounded-3xl bg-slate-50 p-4">
-              <img
-                src={qrCodeUrl}
-                alt="QR code"
-                className="h-40 w-40 rounded-2xl bg-white p-2 shadow"
-              />
-              <p className="mt-3 break-all text-center text-xs font-bold text-blue-600">
-                {APP_URL}
-              </p>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={copyShareText}
-                className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white shadow"
-              >
-                {t.copyIntro}
-              </button>
-              <button
-                type="button"
-                onClick={shareApp}
-                className="rounded-2xl bg-blue-500 px-4 py-3 text-sm font-black text-white shadow"
-              >
-                {t.shareButton}
-              </button>
-            </div>
-
-            {copyStatus && (
-              <p className="mt-3 text-center text-sm font-bold text-blue-600">
-                {copyStatus}
-              </p>
-            )}
-
-            <div className="mt-4 rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-slate-600">
-              <p className="font-bold text-slate-700">
-                {lang === "ko" ? "공유용 소개문" : "紹介文"}
-              </p>
-              <p className="mt-1 whitespace-pre-line">{getShareText(lang)}</p>
-            </div>
-          </div>
-        </section>
+        <p className="shrink-0 px-6 pb-1 text-center text-[11px] font-bold leading-4 text-slate-500">
+          {lang === "ko"
+            ? "← 옆으로 밀어서 1. 산책 체크 / 2. 건강 정보 / 3. 안전·공유를 볼 수 있어요 →"
+            : "← 横にスワイプ：散歩 / 健康 / 安全・共有 →"}
+        </p>
       </div>
     </main>
   );
