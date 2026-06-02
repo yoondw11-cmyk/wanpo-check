@@ -658,6 +658,40 @@ function formatDistanceText(distanceKm: number, lang: Language) {
 }
 
 
+async function fetchOverpassElements(query: string) {
+  const endpoints = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.openstreetmap.ru/api/interpreter",
+  ];
+
+  let lastError: unknown = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: new URLSearchParams({ data: query }).toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Overpass API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return Array.isArray(data.elements) ? data.elements : [];
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError ?? new Error("Overpass API 호출 실패");
+}
+
+
 function normalizeDogFriendlySpot(
   item: any,
   userLat: number,
@@ -1717,36 +1751,20 @@ export default function Home() {
 
       try {
         const query = `
-          [out:json][timeout:25];
+          [out:json][timeout:18];
           (
-            node["leisure"="dog_park"](around:4000,${currentLatitude},${currentLongitude});
-            way["leisure"="dog_park"](around:4000,${currentLatitude},${currentLongitude});
-            relation["leisure"="dog_park"](around:4000,${currentLatitude},${currentLongitude});
-
-            node["leisure"="park"](around:4000,${currentLatitude},${currentLongitude});
-            way["leisure"="park"](around:4000,${currentLatitude},${currentLongitude});
-            relation["leisure"="park"](around:4000,${currentLatitude},${currentLongitude});
-
-            way["highway"~"footway|path|pedestrian"]["name"](around:2500,${currentLatitude},${currentLongitude});
-            relation["route"="foot"]["name"](around:4000,${currentLatitude},${currentLongitude});
-            way["waterway"="riverbank"]["name"](around:5000,${currentLatitude},${currentLongitude});
-            way["natural"="water"]["name"](around:5000,${currentLatitude},${currentLongitude});
-            way["leisure"="garden"](around:3500,${currentLatitude},${currentLongitude});
-            way["landuse"="grass"](around:3000,${currentLatitude},${currentLongitude});
+            node["leisure"~"^(dog_park|park|garden)$"](around:5000,${currentLatitude},${currentLongitude});
+            way["leisure"~"^(dog_park|park|garden)$"](around:5000,${currentLatitude},${currentLongitude});
+            relation["leisure"~"^(dog_park|park|garden)$"](around:5000,${currentLatitude},${currentLongitude});
+            way["highway"~"^(footway|path|pedestrian)$"](around:3000,${currentLatitude},${currentLongitude});
+            way["waterway"="riverbank"](around:6000,${currentLatitude},${currentLongitude});
+            way["natural"="water"](around:5000,${currentLatitude},${currentLongitude});
+            way["landuse"="grass"](around:4000,${currentLatitude},${currentLongitude});
           );
           out center tags;
         `;
 
-        const response = await fetch(
-          `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
-        );
-
-        if (!response.ok) {
-          throw new Error("산책 장소 API 호출 실패");
-        }
-
-        const data = await response.json();
-        const elements = Array.isArray(data.elements) ? data.elements : [];
+        const elements = await fetchOverpassElements(query);
 
         const mapped = elements
           .map((item: any) => normalizeDogFriendlySpot(item, currentLatitude, currentLongitude, lang))
@@ -1789,7 +1807,7 @@ export default function Home() {
 
       try {
         const query = `
-          [out:json][timeout:25];
+          [out:json][timeout:18];
           (
             node["amenity"="veterinary"](around:20000,${currentLatitude},${currentLongitude});
             way["amenity"="veterinary"](around:20000,${currentLatitude},${currentLongitude});
@@ -1798,16 +1816,7 @@ export default function Home() {
           out center tags;
         `;
 
-        const response = await fetch(
-          `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`
-        );
-
-        if (!response.ok) {
-          throw new Error("동물병원 API 호출 실패");
-        }
-
-        const data = await response.json();
-        const elements = Array.isArray(data.elements) ? data.elements : [];
+        const elements = await fetchOverpassElements(query);
 
         const clinics = elements
           .map((item: any) => normalizeVetClinic(item, currentLatitude, currentLongitude, lang))
@@ -2346,7 +2355,7 @@ export default function Home() {
 
           <div className="relative z-10 h-[calc(100%-3.5rem)] overflow-hidden">
             {activePage === 0 && (
-              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-center gap-3">
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-inner">
@@ -2523,7 +2532,7 @@ export default function Home() {
             )}
 
             {activePage === 1 && (
-              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {!isHealthEditorOpen ? (
                   <>
                     <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
@@ -2571,7 +2580,7 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="min-h-0 flex-1 overflow-hidden rounded-3xl bg-white p-3 shadow">
+                    <div className="shrink-0 overflow-visible rounded-3xl bg-white p-3 shadow">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-black text-slate-700">
@@ -3114,7 +3123,7 @@ export default function Home() {
             )}
 
             {activePage === 2 && (
-              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -3136,7 +3145,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white p-3 shadow [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="shrink-0 overflow-visible rounded-3xl bg-white p-3 shadow">
                   <div className="space-y-2">
                     {seasonalRiskCards.map((card) => (
                       <div key={card.title} className={`rounded-3xl p-3 ${card.cardClass}`}>
@@ -3173,7 +3182,7 @@ export default function Home() {
             )}
 
             {activePage === 3 && (
-              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -3193,7 +3202,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white p-3 shadow [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="shrink-0 overflow-visible rounded-3xl bg-white p-3 shadow">
                   <div className="space-y-2">
                     <div className="rounded-2xl bg-green-50 px-3 py-2 text-xs leading-5 text-slate-700">
                       <p className="font-black text-green-700">{lang === "ko" ? "안내" : "ご案内"}</p>
@@ -3203,6 +3212,19 @@ export default function Home() {
                           : "公園や散歩道は公開地図データをもとに表示しています。実際の利用可否や犬同伴ルールは現地の案内もご確認ください。"}
                       </p>
                     </div>
+
+                    <a
+                      href={
+                        latitude !== null && longitude !== null
+                          ? `https://www.google.com/maps/search/${encodeURIComponent(lang === "ko" ? "근처 공원 산책로" : "近く 公園 散歩道")}/@${latitude},${longitude},14z`
+                          : `https://www.google.com/maps/search/${encodeURIComponent(lang === "ko" ? "근처 공원 산책로" : "近く 公園 散歩道")}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block rounded-2xl bg-green-600 px-3 py-2 text-center text-xs font-black text-white shadow"
+                    >
+                      {lang === "ko" ? "Google 지도에서 산책 장소 바로 보기" : "Googleマップで散歩スポットを見る"}
+                    </a>
 
                     {isLoadingDogSpots && (
                       <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
@@ -3296,7 +3318,7 @@ export default function Home() {
             )}
 
             {activePage === 4 && (
-              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -3316,7 +3338,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="min-h-0 flex-1 overflow-y-auto rounded-3xl bg-white p-3 shadow [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="shrink-0 overflow-visible rounded-3xl bg-white p-3 shadow">
                   <div className="space-y-2">
                     <div className="rounded-2xl bg-blue-50 px-3 py-2 text-xs leading-5 text-slate-700">
                       <p className="font-black text-blue-700">
@@ -3328,6 +3350,15 @@ export default function Home() {
                           : "通常の近い病院は除外し、24時間表示がある候補だけを表示します。ただし公開データが誤っている場合があるため、情報確認ボタンで住所・電話番号・診療時間を必ず確認してください。"}
                       </p>
                     </div>
+
+                    <a
+                      href={emergencyVetSearchUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block rounded-2xl bg-blue-600 px-3 py-2 text-center text-xs font-black text-white shadow"
+                    >
+                      {lang === "ko" ? "Google 지도에서 24시간 동물병원 검색" : "Googleマップで24時間動物病院を検索"}
+                    </a>
 
                     {isLoadingVets && (
                       <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
@@ -3417,7 +3448,7 @@ export default function Home() {
             )}
 
             {activePage === 5 && (
-              <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -3492,7 +3523,7 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="min-h-0 flex-1 overflow-hidden rounded-3xl bg-white p-3 shadow">
+                <div className="shrink-0 overflow-visible rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-black text-slate-700">{t.shareTitle}</p>
