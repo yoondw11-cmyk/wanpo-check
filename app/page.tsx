@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 
@@ -197,13 +197,1040 @@ const breedData = {
 type SurfaceType = keyof typeof surfaceData;
 type SunType = keyof typeof sunData;
 type BreedType = keyof typeof breedData;
-type Language = "ko" | "ja";
+type Language = "ko" | "ja" | "en" | "zh";
+
+const languageOrder: Language[] = ["ko", "ja", "en", "zh"];
+
+const textTranslationMap: Record<string, { en: string; zh: string }> = {
+  "산책해도댕?": {
+    "en": "Paw-ssible Walk?",
+    "zh": "现在遛汪可以吗？"
+  },
+  "먼저 우리 강아지 정보를 등록해볼게요.": {
+    "en": "Let’s register your dog first.",
+    "zh": "先来登记狗狗的信息吧。"
+  },
+  "강아지 이름": {
+    "en": "Dog name",
+    "zh": "狗狗名字"
+  },
+  "예: 쿠키": {
+    "en": "e.g. Cookie",
+    "zh": "例：饼干"
+  },
+  "강아지 종류": {
+    "en": "Dog breed",
+    "zh": "狗狗品种"
+  },
+  "시작하기": {
+    "en": "Start",
+    "zh": "开始"
+  },
+  "日本語": {
+    "en": "日本語",
+    "zh": "日本語"
+  },
+  "오늘의 산책 체크": {
+    "en": "Today’s walk check",
+    "zh": "今日遛狗检查"
+  },
+  "는 지금 산책해도댕?": {
+    "en": ", can we walk now?",
+    "zh": "现在可以遛汪吗？"
+  },
+  "강아지 정보 다시 설정": {
+    "en": "Reset dog profile",
+    "zh": "重新设置狗狗信息"
+  },
+  "현재 위치/날씨": {
+    "en": "Current location / weather",
+    "zh": "当前位置 / 天气"
+  },
+  "현재 기온": {
+    "en": "Air temperature",
+    "zh": "当前气温"
+  },
+  "풍속": {
+    "en": "Wind",
+    "zh": "风速"
+  },
+  "구름": {
+    "en": "Clouds",
+    "zh": "云量"
+  },
+  "일사량": {
+    "en": "Sunlight",
+    "zh": "日照量"
+  },
+  "자외선": {
+    "en": "UV",
+    "zh": "紫外线"
+  },
+  "대기질": {
+    "en": "Air quality",
+    "zh": "空气质量"
+  },
+  "초미세먼지": {
+    "en": "PM2.5",
+    "zh": "PM2.5"
+  },
+  "예상 지면온도": {
+    "en": "Estimated ground temp",
+    "zh": "预计地面温度"
+  },
+  "바닥 종류": {
+    "en": "Surface type",
+    "zh": "地面类型"
+  },
+  "햇빛 상태": {
+    "en": "Sun exposure",
+    "zh": "阳光状态"
+  },
+  "추천 산책 시간": {
+    "en": "Recommended walk time",
+    "zh": "推荐遛狗时间"
+  },
+  "손등 7초 테스트": {
+    "en": "7-second back-of-hand test",
+    "zh": "手背7秒测试"
+  },
+  "산책 전, 손등을 지면에 대고 7초 동안 버틸 수 있는지 확인해보세요.": {
+    "en": "Before walking, place the back of your hand on the ground and see if you can hold it for 7 seconds.",
+    "zh": "遛狗前，把手背贴在地面上，看看能不能坚持7秒。"
+  },
+  "손등을 지면에 대고 유지해주세요.": {
+    "en": "Keep the back of your hand on the ground.",
+    "zh": "请把手背贴在地面上保持。"
+  },
+  "7초 동안 괜찮았다면 산책 가능성이 높아요. 그래도 강아지 상태를 보면서 짧게 시작해주세요.": {
+    "en": "If 7 seconds felt okay, a walk is more likely safe. Still, start short and watch your dog.",
+    "zh": "如果7秒没问题，通常可以考虑散步。但还是请先短时间开始并观察狗狗状态。"
+  },
+  "시작": {
+    "en": "Start",
+    "zh": "开始"
+  },
+  "리셋": {
+    "en": "Reset",
+    "zh": "重置"
+  },
+  "잠시만 기다려주세요...": {
+    "en": "Please wait a moment...",
+    "zh": "请稍等..."
+  },
+  "강아지 이름을 입력해주세요.": {
+    "en": "Please enter your dog’s name.",
+    "zh": "请输入狗狗名字。"
+  },
+  "산책 전 꼭 확인해주세요": {
+    "en": "Check before walking",
+    "zh": "遛狗前请确认"
+  },
+  "이 앱의 지면온도는 실제 측정값이 아니라 날씨, 일사량, 바닥 종류를 바탕으로 계산한 추정값입니다.": {
+    "en": "Ground temperature is an estimate based on weather, sunlight, and surface type, not a direct measurement.",
+    "zh": "本应用的地面温度是根据天气、日照和地面类型计算的估计值，并非实测值。"
+  },
+  "산책 전 손등 7초 테스트와 강아지의 호흡, 걸음걸이, 컨디션을 함께 확인해주세요.": {
+    "en": "Before walking, also check the 7-second hand test, breathing, gait, and overall condition.",
+    "zh": "遛狗前请同时确认手背7秒测试、呼吸、步态和精神状态。"
+  },
+  "강아지 산책 지면온도 기준": {
+    "en": "Ground temperature guide",
+    "zh": "狗狗遛弯地面温度参考"
+  },
+  "참고: 수의사 및 동물보호단체의 고온 포장도로 주의 권장사항과 손등 7초 테스트를 바탕으로 한 앱용 참고 기준입니다.": {
+    "en": "Reference: an app guide based on veterinary/animal welfare hot pavement advice and the 7-second hand test.",
+    "zh": "参考：基于兽医及动物保护团体关于高温路面的提醒和手背7秒测试整理的应用参考标准。"
+  },
+  "앱 공유하기": {
+    "en": "Share this app",
+    "zh": "分享应用"
+  },
+  "여름철 강아지 산책 가능 여부를 날씨와 예상 지면온도로 확인할 수 있는 앱입니다.": {
+    "en": "Check whether it’s safe to walk your dog using weather and estimated ground temperature.",
+    "zh": "通过天气和预计地面温度判断狗狗是否适合出门散步。"
+  },
+  "소개문 복사": {
+    "en": "Copy intro",
+    "zh": "复制介绍文"
+  },
+  "공유하기": {
+    "en": "Share",
+    "zh": "分享"
+  },
+  "복사했어요": {
+    "en": "Copied",
+    "zh": "已复制"
+  },
+  "좋음": {
+    "en": "Good",
+    "zh": "良好"
+  },
+  "보통": {
+    "en": "Moderate",
+    "zh": "普通"
+  },
+  "주의": {
+    "en": "Caution",
+    "zh": "注意"
+  },
+  "나쁨": {
+    "en": "Bad",
+    "zh": "较差"
+  },
+  "매우 나쁨": {
+    "en": "Very bad",
+    "zh": "很差"
+  },
+  "위험": {
+    "en": "Danger",
+    "zh": "危险"
+  },
+  "낮음": {
+    "en": "Low",
+    "zh": "低"
+  },
+  "높음": {
+    "en": "High",
+    "zh": "高"
+  },
+  "매우 높음": {
+    "en": "Very high",
+    "zh": "很高"
+  },
+  "24시간 표시 후보": {
+    "en": "24-hour listed candidate",
+    "zh": "标注24小时候选"
+  },
+  "공개 지도 데이터에 24시간 표시가 있는 후보예요. 실제 진료 가능 여부는 정보확인에서 반드시 확인해주세요.": {
+    "en": "This candidate is marked 24-hour in public map data. Please confirm availability via the info button.",
+    "zh": "这是公开地图数据中标注为24小时的候选。实际能否就诊请务必通过信息按钮确认。"
+  },
+  "제외": {
+    "en": "Excluded",
+    "zh": "已排除"
+  },
+  "24시간 표시가 없어 목록에서 제외되는 병원입니다.": {
+    "en": "This clinic is excluded because it is not marked 24-hour.",
+    "zh": "该医院未标注24小时，因此从列表中排除。"
+  },
+  "이름 미확인 동물병원": {
+    "en": "Unnamed veterinary clinic",
+    "zh": "未确认名称的动物医院"
+  },
+  "주소 정보 없음": {
+    "en": "No address info",
+    "zh": "无地址信息"
+  },
+  "영업시간 정보 없음": {
+    "en": "No hours info",
+    "zh": "无营业时间信息"
+  },
+  "산책 장소": {
+    "en": "Walk spot",
+    "zh": "遛狗地点"
+  },
+  "공개 지도 데이터 기반 산책 장소예요.": {
+    "en": "A walk spot based on public map data.",
+    "zh": "基于公开地图数据的遛狗地点。"
+  },
+  "이름 없는 산책 장소": {
+    "en": "Unnamed walk spot",
+    "zh": "未命名遛狗地点"
+  },
+  "도그 파크": {
+    "en": "Dog park",
+    "zh": "狗狗公园"
+  },
+  "강아지가 쉬거나 뛰놀기 좋은 도그 파크예요.": {
+    "en": "A dog park where your dog can rest or play.",
+    "zh": "适合狗狗休息或奔跑玩耍的狗狗公园。"
+  },
+  "근처 도그 파크": {
+    "en": "Nearby dog park",
+    "zh": "附近狗狗公园"
+  },
+  "공원": {
+    "en": "Park",
+    "zh": "公园"
+  },
+  "가볍게 산책하기 좋은 근처 공원이에요.": {
+    "en": "A nearby park good for an easy walk.",
+    "zh": "适合轻松散步的附近公园。"
+  },
+  "근처 공원": {
+    "en": "Nearby park",
+    "zh": "附近公园"
+  },
+  "산책로": {
+    "en": "Walking path",
+    "zh": "步道"
+  },
+  "걷기 좋은 길로 표시된 산책로예요.": {
+    "en": "A path marked as good for walking.",
+    "zh": "标注为适合步行的散步路线。"
+  },
+  "근처 산책로": {
+    "en": "Nearby walking path",
+    "zh": "附近步道"
+  },
+  "강변 / 수변": {
+    "en": "Riverside / waterside",
+    "zh": "河边 / 水边"
+  },
+  "강변이나 수변 주변 산책 후보예요.": {
+    "en": "A riverside or waterside walk candidate.",
+    "zh": "河边或水边附近的散步候选地点。"
+  },
+  "근처 강변길": {
+    "en": "Nearby riverside path",
+    "zh": "附近河边路"
+  },
+  "녹지": {
+    "en": "Green space",
+    "zh": "绿地"
+  },
+  "잔디나 녹지 공간으로 표시된 곳이에요.": {
+    "en": "A place marked as grass or green space.",
+    "zh": "标注为草地或绿地的空间。"
+  },
+  "근처 녹지": {
+    "en": "Nearby green space",
+    "zh": "附近绿地"
+  },
+  "봄": {
+    "en": "Spring",
+    "zh": "春季"
+  },
+  "여름": {
+    "en": "Summer",
+    "zh": "夏季"
+  },
+  "가을": {
+    "en": "Autumn",
+    "zh": "秋季"
+  },
+  "겨울": {
+    "en": "Winter",
+    "zh": "冬季"
+  },
+  "진드기 / 벼룩": {
+    "en": "Ticks / fleas",
+    "zh": "蜱虫 / 跳蚤"
+  },
+  "활동 높음": {
+    "en": "High activity",
+    "zh": "活动较高"
+  },
+  "기본 주의": {
+    "en": "Basic caution",
+    "zh": "基本注意"
+  },
+  "감염병 / 유행성 질환": {
+    "en": "Infections / seasonal illness",
+    "zh": "感染病 / 流行性疾病"
+  },
+  "더위 / 열사병 / 아스팔트": {
+    "en": "Heat / heatstroke / pavement",
+    "zh": "高温 / 中暑 / 沥青路面"
+  },
+  "확인": {
+    "en": "Check",
+    "zh": "确认"
+  },
+  "비 / 태풍 / 폭염 / 한파": {
+    "en": "Rain / typhoon / heatwave / cold wave",
+    "zh": "雨 / 台风 / 酷暑 / 寒潮"
+  },
+  "계절 주의": {
+    "en": "Seasonal caution",
+    "zh": "季节注意"
+  },
+  "한파 주의": {
+    "en": "Cold wave caution",
+    "zh": "寒潮注意"
+  },
+  "기본 확인": {
+    "en": "Basic check",
+    "zh": "基本确认"
+  },
+  "산책 가능해요": {
+    "en": "Walk looks OK",
+    "zh": "可以遛狗"
+  },
+  "일반 산책이 가능해요. 그래도 물은 꼭 챙겨주세요.": {
+    "en": "A normal walk looks okay. Still, bring water.",
+    "zh": "一般散步可以。还是请一定带水。"
+  },
+  "짧게 산책 가능해요": {
+    "en": "Short walk is OK",
+    "zh": "可以短时间遛狗"
+  },
+  "짧은 산책은 가능하지만, 중간중간 쉬어주세요.": {
+    "en": "A short walk is possible, but take breaks.",
+    "zh": "可以短时间散步，但请中途休息。"
+  },
+  "조심해야 해요": {
+    "en": "Be careful",
+    "zh": "需要小心"
+  },
+  "손등 7초 테스트를 먼저 해보고, 짧게 산책하세요.": {
+    "en": "Do the 7-second hand test first and keep the walk short.",
+    "zh": "请先做手背7秒测试，然后短时间散步。"
+  },
+  "지금은 위험해요": {
+    "en": "Risky now",
+    "zh": "现在有危险"
+  },
+  "가능하면 산책을 미루고, 배변 산책만 짧게 해주세요.": {
+    "en": "If possible, postpone the walk and only do a short potty walk.",
+    "zh": "如果可以，请推迟散步，只进行短时间排便散步。"
+  },
+  "산책하지 마세요": {
+    "en": "Avoid walking",
+    "zh": "请避免散步"
+  },
+  "지면 온도가 너무 높아요. 실내 놀이로 대체하세요.": {
+    "en": "The ground is too hot. Choose indoor play instead.",
+    "zh": "地面温度太高，请改为室内玩耍。"
+  },
+  "더위 스트레스 위험": {
+    "en": "Heat stress danger",
+    "zh": "高温压力危险"
+  },
+  "열사병·탈수 위험이 커요. 가능하면 산책을 미루고 물과 그늘을 우선해주세요.": {
+    "en": "Heatstroke/dehydration risk is high. If possible, postpone and prioritize water and shade.",
+    "zh": "中暑和脱水风险较高。尽量推迟散步，并优先补水和阴凉处。"
+  },
+  "더위 스트레스 주의": {
+    "en": "Heat stress caution",
+    "zh": "高温压力注意"
+  },
+  "짧게 산책하고, 헐떡임·침흘림·걸음 둔화를 확인해주세요.": {
+    "en": "Keep it short and watch for panting, drooling, or slower walking.",
+    "zh": "请短时间散步，并观察喘气、流口水、步伐变慢等情况。"
+  },
+  "더위 스트레스 확인": {
+    "en": "Heat stress check",
+    "zh": "高温压力确认"
+  },
+  "대체로 가능하지만 물, 휴식, 그늘을 챙기면 더 안전해요.": {
+    "en": "Mostly okay, but water, breaks, and shade make it safer.",
+    "zh": "大体可以，但准备水、休息和阴凉处会更安全。"
+  },
+  "더위 스트레스 낮음": {
+    "en": "Low heat stress",
+    "zh": "高温压力较低"
+  },
+  "열사병 위험은 낮은 편이에요. 그래도 강아지 상태는 계속 봐주세요.": {
+    "en": "Heatstroke risk is low, but keep watching your dog.",
+    "zh": "中暑风险较低，但还是请继续观察狗狗状态。"
+  },
+  "ko-KR": {
+    "en": "en-US",
+    "zh": "zh-CN"
+  },
+  "오늘은 늦은 밤 또는 내일 아침 권장": {
+    "en": "Late tonight or tomorrow morning is recommended",
+    "zh": "建议今晚较晚或明天早上"
+  },
+  "앞으로 24시간 안에 충분히 안전한 시간이 뚜렷하지 않아요.": {
+    "en": "No clearly safe time was found in the next 24 hours.",
+    "zh": "未来24小时内没有明显足够安全的时间段。"
+  },
+  "미입력": {
+    "en": "Not entered",
+    "zh": "未填写"
+  },
+  "1개월 미만": {
+    "en": "Under 1 month",
+    "zh": "未满1个月"
+  },
+  "남아": {
+    "en": "Male",
+    "zh": "公狗"
+  },
+  "여아": {
+    "en": "Female",
+    "zh": "母狗"
+  },
+  "완료": {
+    "en": "Done",
+    "zh": "已完成"
+  },
+  "미완료": {
+    "en": "Not done",
+    "zh": "未完成"
+  },
+  "기한 지남": {
+    "en": "Overdue",
+    "zh": "已过期"
+  },
+  "곧 예정": {
+    "en": "Due soon",
+    "zh": "即将到期"
+  },
+  "예정": {
+    "en": "Scheduled",
+    "zh": "预定"
+  },
+  "위치 확인 중...": {
+    "en": "Checking location...",
+    "zh": "正在确认位置..."
+  },
+  "실제 날씨와 시간별 예보 반영 중": {
+    "en": "Using current weather and hourly forecast",
+    "zh": "正在反映实时天气和小时预报"
+  },
+  "날씨 정보를 가져오지 못해 기본값 26℃를 사용 중": {
+    "en": "Couldn’t load weather, using default 26℃",
+    "zh": "无法获取天气信息，正在使用默认26℃"
+  },
+  "이 브라우저는 위치 정보를 지원하지 않아요.": {
+    "en": "This browser does not support location.",
+    "zh": "此浏览器不支持位置信息。"
+  },
+  "위치 권한이 없어 기본값 26℃를 사용 중": {
+    "en": "Location permission denied, using default 26℃",
+    "zh": "未获得位置权限，正在使用默认26℃"
+  },
+  "날씨 정보를 불러오는 중...": {
+    "en": "Loading weather...",
+    "zh": "正在加载天气..."
+  },
+  "계산 중...": {
+    "en": "Calculating...",
+    "zh": "计算中..."
+  },
+  "시간별 예보를 불러오고 있어요.": {
+    "en": "Loading hourly forecast.",
+    "zh": "正在加载小时预报。"
+  },
+  "강아지 동반 카페": {
+    "en": "dog-friendly cafe nearby",
+    "zh": "附近可带狗咖啡馆"
+  },
+  "강아지 동반 식당": {
+    "en": "dog-friendly restaurant nearby",
+    "zh": "附近可带狗餐厅"
+  },
+  "강아지는 최대 5마리까지 저장할 수 있어요.": {
+    "en": "You can save up to 5 dogs.",
+    "zh": "最多可以保存5只狗狗。"
+  },
+  "복사에 실패했어요": {
+    "en": "Copy failed",
+    "zh": "复制失败"
+  },
+  "자주 가는 병원 정보를 삭제할까요?": {
+    "en": "Delete your favorite clinic info?",
+    "zh": "要删除常去医院信息吗？"
+  },
+  "강아지 추가하기": {
+    "en": "Add a dog",
+    "zh": "添加狗狗"
+  },
+  "이름과 견종만 먼저 저장하고, 자세한 건강 정보는 앱 안에서 추가할 수 있어요.": {
+    "en": "Save only name and breed first; detailed health info can be added later.",
+    "zh": "可以先保存名字和品种，详细健康信息之后在应用内添加。"
+  },
+  "이름과 견종만 먼저 등록해도 바로 시작할 수 있어요.": {
+    "en": "You can start with just name and breed.",
+    "zh": "只登记名字和品种也可以马上开始。"
+  },
+  "나머지 정보는 나중에 입력": {
+    "en": "Fill in the rest later",
+    "zh": "其他信息稍后填写"
+  },
+  "생일, 체중, 예방접종, 심장사상충약, 벼룩·진드기약 기록은 앱 안의 ‘건강 정보 관리’에서 추가할 수 있어요.": {
+    "en": "Birthday, weight, vaccines, heartworm, flea/tick records can be added in Health Info.",
+    "zh": "生日、体重、疫苗、心丝虫药、跳蚤蜱虫药记录可以在健康信息管理中添加。"
+  },
+  "추가하기": {
+    "en": "Add",
+    "zh": "添加"
+  },
+  "돌아가기": {
+    "en": "Back",
+    "zh": "返回"
+  },
+  "등록된 강아지": {
+    "en": "Registered dogs",
+    "zh": "已登记狗狗"
+  },
+  "+ 추가": {
+    "en": "+ Add",
+    "zh": "+ 添加"
+  },
+  "건강 정보 관리": {
+    "en": "Health info",
+    "zh": "健康信息管理"
+  },
+  "기본 정보와 투약·접종 기록": {
+    "en": "Basic info, medicine and vaccine records",
+    "zh": "基本信息、用药和接种记录"
+  },
+  "수정": {
+    "en": "Edit",
+    "zh": "编辑"
+  },
+  "나이": {
+    "en": "Age",
+    "zh": "年龄"
+  },
+  "체중": {
+    "en": "Weight",
+    "zh": "体重"
+  },
+  "성별": {
+    "en": "Sex",
+    "zh": "性别"
+  },
+  "중성화": {
+    "en": "Neutered",
+    "zh": "绝育"
+  },
+  "건강 기록 요약": {
+    "en": "Health record summary",
+    "zh": "健康记录摘要"
+  },
+  "광견병 다음 접종": {
+    "en": "Rabies next dose",
+    "zh": "狂犬病下次接种"
+  },
+  "혼합백신 다음 접종": {
+    "en": "Combo vaccine next dose",
+    "zh": "联苗下次接种"
+  },
+  "심장사상충약 다음": {
+    "en": "Heartworm next dose",
+    "zh": "心丝虫药下次"
+  },
+  "벼룩, 진드기약 다음": {
+    "en": "Flea/tick next dose",
+    "zh": "跳蚤蜱虫药下次"
+  },
+  "자주 가는 병원": {
+    "en": "Favorite clinic",
+    "zh": "常去医院"
+  },
+  "등록": {
+    "en": "Register",
+    "zh": "登记"
+  },
+  "병원명 미입력": {
+    "en": "Clinic name not entered",
+    "zh": "未填写医院名"
+  },
+  "전화": {
+    "en": "Call",
+    "zh": "电话"
+  },
+  "주소": {
+    "en": "Address",
+    "zh": "地址"
+  },
+  "영업시간": {
+    "en": "Hours",
+    "zh": "营业时间"
+  },
+  "지도": {
+    "en": "Map",
+    "zh": "地图"
+  },
+  "길찾기": {
+    "en": "Directions",
+    "zh": "路线"
+  },
+  "자주 가는 병원을 등록해두면 응급 상황에서 바로 전화하거나 길찾기를 열 수 있어요.": {
+    "en": "Save a favorite clinic so you can call or open directions quickly in an emergency.",
+    "zh": "登记常去医院后，紧急时可以马上打电话或打开路线。"
+  },
+  "자주 가는 병원 등록": {
+    "en": "Register favorite clinic",
+    "zh": "登记常去医院"
+  },
+  "병원명, 전화번호, 주소를 저장해둘 수 있어요.": {
+    "en": "Save clinic name, phone number, and address.",
+    "zh": "可以保存医院名、电话号码和地址。"
+  },
+  "닫기": {
+    "en": "Close",
+    "zh": "关闭"
+  },
+  "병원명": {
+    "en": "Clinic name",
+    "zh": "医院名"
+  },
+  "전화번호": {
+    "en": "Phone number",
+    "zh": "电话号码"
+  },
+  "영업시간 / 야간 대응 메모": {
+    "en": "Hours / night-care note",
+    "zh": "营业时间 / 夜间应对备注"
+  },
+  "메모": {
+    "en": "Memo",
+    "zh": "备注"
+  },
+  "저장": {
+    "en": "Save",
+    "zh": "保存"
+  },
+  "취소": {
+    "en": "Cancel",
+    "zh": "取消"
+  },
+  "삭제": {
+    "en": "Delete",
+    "zh": "删除"
+  },
+  "강아지 건강 정보 수정": {
+    "en": "Edit dog health info",
+    "zh": "编辑狗狗健康信息"
+  },
+  "이 화면 안에서만 스크롤됩니다.": {
+    "en": "Only this panel scrolls.",
+    "zh": "仅此区域可滚动。"
+  },
+  "강아지 개인 정보": {
+    "en": "Dog profile",
+    "zh": "狗狗基本信息"
+  },
+  "생일": {
+    "en": "Birthday",
+    "zh": "生日"
+  },
+  "체중 kg": {
+    "en": "Weight kg",
+    "zh": "体重 kg"
+  },
+  "예: 5.2": {
+    "en": "e.g. 5.2",
+    "zh": "例：5.2"
+  },
+  "주의 질병 / 알레르기": {
+    "en": "Conditions / allergies",
+    "zh": "疾病注意事项 / 过敏"
+  },
+  "추가 메모": {
+    "en": "Additional memo",
+    "zh": "追加备注"
+  },
+  "예방접종 기록": {
+    "en": "Vaccination records",
+    "zh": "疫苗接种记录"
+  },
+  "광견병": {
+    "en": "Rabies",
+    "zh": "狂犬病"
+  },
+  "혼합백신": {
+    "en": "Combo vaccine",
+    "zh": "联苗"
+  },
+  "마지막 날짜": {
+    "en": "Last date",
+    "zh": "上次日期"
+  },
+  "다음 예정일": {
+    "en": "Next due date",
+    "zh": "下次预定日"
+  },
+  "기타 백신": {
+    "en": "Other vaccine",
+    "zh": "其他疫苗"
+  },
+  "백신 이름": {
+    "en": "Vaccine name",
+    "zh": "疫苗名称"
+  },
+  "투약 기록": {
+    "en": "Medication records",
+    "zh": "用药记录"
+  },
+  "심장사상충약": {
+    "en": "Heartworm medicine",
+    "zh": "心丝虫药"
+  },
+  "벼룩, 진드기약": {
+    "en": "Flea/tick medicine",
+    "zh": "跳蚤蜱虫药"
+  },
+  "약 종류": {
+    "en": "Medicine type",
+    "zh": "药物种类"
+  },
+  "앱 안에서 알림 표시": {
+    "en": "Show reminder in app",
+    "zh": "在应用内显示提醒"
+  },
+  "계절별 / 현재 유행 위험 정보": {
+    "en": "Seasonal / current risk info",
+    "zh": "季节性 / 当前流行风险信息"
+  },
+  "현재 시즌": {
+    "en": "Current season",
+    "zh": "当前季节"
+  },
+  "산책 후 체크": {
+    "en": "Post-walk check",
+    "zh": "散步后检查"
+  },
+  "발 / 발바닥": {
+    "en": "Feet / paw pads",
+    "zh": "脚 / 肉垫"
+  },
+  "귀 뒤 / 겨드랑이": {
+    "en": "Behind ears / armpits",
+    "zh": "耳后 / 腋下"
+  },
+  "배 / 꼬리 주변": {
+    "en": "Belly / around tail",
+    "zh": "腹部 / 尾巴周围"
+  },
+  "호흡 / 탈수": {
+    "en": "Breathing / dehydration",
+    "zh": "呼吸 / 脱水"
+  },
+  "근처 강아지 산책 장소": {
+    "en": "Nearby dog walk spots",
+    "zh": "附近狗狗散步地点"
+  },
+  "무료 지도 데이터를 바탕으로 공원, 산책로, 강변길, 녹지, 도그 파크를 보여줘요.": {
+    "en": "Shows parks, paths, riversides, green spaces, and dog parks using free map data.",
+    "zh": "基于免费地图数据显示公园、步道、河边路、绿地和狗狗公园。"
+  },
+  "근처 검색": {
+    "en": "Nearby search",
+    "zh": "附近搜索"
+  },
+  "안내": {
+    "en": "Note",
+    "zh": "提示"
+  },
+  "공원과 산책로는 공개 지도 데이터 기준이라 실제 출입 가능 여부나 반려견 허용 규칙은 현장 표지판을 함께 확인해주세요.": {
+    "en": "Parks and paths are based on public map data. Please check local signs for dog rules.",
+    "zh": "公园和步道基于公开地图数据。请同时确认现场标识和是否允许带狗。"
+  },
+  "근처 공원 산책로": {
+    "en": "nearby parks walking paths",
+    "zh": "附近公园步道"
+  },
+  "Google 지도에서 산책 장소 바로 보기": {
+    "en": "Open walk spots in Google Maps",
+    "zh": "在Google地图查看散步地点"
+  },
+  "근처 산책 장소를 찾는 중이에요...": {
+    "en": "Finding nearby walk spots...",
+    "zh": "正在查找附近散步地点..."
+  },
+  "근처 산책 장소를 찾지 못했어요. 위치 권한이나 네트워크를 확인해주세요.": {
+    "en": "Couldn’t find nearby walk spots. Check location permission or network.",
+    "zh": "找不到附近散步地点。请确认位置权限或网络。"
+  },
+  "산책 장소 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.": {
+    "en": "Couldn’t load walk spot info. Please try again later.",
+    "zh": "无法加载散步地点信息。请稍后再试。"
+  },
+  "현재 위치에서 ": {
+    "en": "From current location ",
+    "zh": "距离当前位置 "
+  },
+  "강아지 동반 카페 / 식당 찾기": {
+    "en": "Find dog-friendly cafes / restaurants",
+    "zh": "查找可带狗咖啡馆 / 餐厅"
+  },
+  "정확한 반려견 동반 가능 여부는 가게마다 달라서, 지금은 Google 검색 버튼으로 연결해드려요.": {
+    "en": "Dog-friendly rules vary by shop, so this opens a Google search for now.",
+    "zh": "是否可带狗因店铺而异，目前通过Google搜索按钮确认。"
+  },
+  "카페 찾기": {
+    "en": "Find cafes",
+    "zh": "查找咖啡馆"
+  },
+  "식당 찾기": {
+    "en": "Find restaurants",
+    "zh": "查找餐厅"
+  },
+  "20km 이내 24시간 동물병원 후보": {
+    "en": "24-hour vet candidates within 20 km",
+    "zh": "20公里内24小时动物医院候选"
+  },
+  "현재 위치 기준 20km 이내에서 공개 데이터에 24시간 표시가 있는 병원만 보여줘요.": {
+    "en": "Shows only clinics within 20 km marked 24-hour in public data.",
+    "zh": "仅显示当前位置20公里内公开数据中标注24小时的医院。"
+  },
+  "검색 범위": {
+    "en": "Search range",
+    "zh": "搜索范围"
+  },
+  "일반 가까운 병원은 제외하고, 24시간 표시가 있는 후보만 보여줘요. 단, 공개 데이터가 틀릴 수 있으니 정보확인 버튼으로 주소·전화번호·진료시간을 반드시 확인해주세요.": {
+    "en": "Regular nearby clinics are excluded; only 24-hour-marked candidates are shown. Public data may be wrong, so confirm address, phone, and hours with the info button.",
+    "zh": "不显示普通附近医院，只显示标注24小时的候选。但公开数据可能有误，请务必用信息确认按钮确认地址、电话和时间。"
+  },
+  "Google 지도에서 24시간 동물병원 검색": {
+    "en": "Search 24-hour vets in Google Maps",
+    "zh": "在Google地图搜索24小时动物医院"
+  },
+  "20km 이내 24시간 동물병원 후보를 찾는 중이에요...": {
+    "en": "Finding 24-hour vet candidates within 20 km...",
+    "zh": "正在查找20公里内24小时动物医院候选..."
+  },
+  "공개 지도 데이터에서 20km 이내 24시간 표시 후보를 찾지 못했어요.": {
+    "en": "No 24-hour-marked candidates within 20 km were found in public map data.",
+    "zh": "公开地图数据中未找到20公里内标注24小时的候选。"
+  },
+  "정보확인": {
+    "en": "Info check",
+    "zh": "信息确认"
+  },
+  "동물병원 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.": {
+    "en": "Couldn’t load vet info. Please try again later.",
+    "zh": "无法加载动物医院信息。请稍后再试。"
+  },
+  "주소·전화번호·진료시간은 정보확인 버튼에서 최신 페이지로 확인해주세요.": {
+    "en": "Please use Info Check to confirm the latest address, phone, and hours.",
+    "zh": "请通过信息确认按钮查看最新地址、电话和诊疗时间。"
+  },
+  "35℃ 이하": {
+    "en": "35℃ or lower",
+    "zh": "35℃以下"
+  },
+  "산책 가능": {
+    "en": "Walk OK",
+    "zh": "可以散步"
+  },
+  "짧게 가능": {
+    "en": "Short walk OK",
+    "zh": "可短时间散步"
+  },
+  "주의 필요": {
+    "en": "Caution needed",
+    "zh": "需要注意"
+  },
+  "50℃ 이상": {
+    "en": "50℃ or higher",
+    "zh": "50℃以上"
+  },
+  "산책 피하기": {
+    "en": "Avoid walking",
+    "zh": "避免散步"
+  },
+  "공유용 소개문 보기": {
+    "en": "View share intro",
+    "zh": "查看分享介绍文"
+  },
+
+  "아스팔트": { "en": "Asphalt", "zh": "沥青" },
+  "콘크리트": { "en": "Concrete", "zh": "混凝土" },
+  "보도블럭": { "en": "Pavers", "zh": "人行道砖" },
+  "잔디": { "en": "Grass", "zh": "草地" },
+  "직사광선": { "en": "Direct sun", "zh": "直射阳光" },
+  "반그늘": { "en": "Partial shade", "zh": "半阴" },
+  "그늘": { "en": "Shade", "zh": "阴凉" },
+};
+
+function makeTextKey(koText: string, jaText: string) {
+  return `${koText}|||${jaText}`;
+}
+
+function pickText(lang: Language, koText: string, jaText: string) {
+  if (lang === "ko") return koText;
+  if (lang === "ja") return jaText;
+
+  const translated =
+    textTranslationMap[makeTextKey(koText, jaText)] ?? textTranslationMap[koText];
+
+  if (translated) {
+    return lang === "en" ? translated.en : translated.zh;
+  }
+
+  return lang === "en" ? jaText : jaText;
+}
+
+function multiText(
+  lang: Language,
+  koText: string,
+  jaText: string,
+  enText: string,
+  zhText: string
+) {
+  if (lang === "ko") return koText;
+  if (lang === "ja") return jaText;
+  if (lang === "en") return enText;
+  return zhText;
+}
+
+const breedLabelMap: Record<string, { en: string; zh: string }> = {
+  shiba: { en: "Shiba Inu", zh: "柴犬" },
+  toyPoodle: { en: "Toy Poodle", zh: "玩具贵宾犬" },
+  poodle: { en: "Poodle", zh: "贵宾犬" },
+  chihuahua: { en: "Chihuahua", zh: "吉娃娃" },
+  dachshund: { en: "Dachshund", zh: "腊肠犬" },
+  pomeranian: { en: "Pomeranian", zh: "博美犬" },
+  maltese: { en: "Maltese", zh: "马尔济斯" },
+  bichon: { en: "Bichon Frise", zh: "比熊犬" },
+  yorkshireTerrier: { en: "Yorkshire Terrier", zh: "约克夏梗" },
+  miniatureSchnauzer: { en: "Miniature Schnauzer", zh: "迷你雪纳瑞" },
+  frenchBulldog: { en: "French Bulldog", zh: "法国斗牛犬" },
+  pug: { en: "Pug", zh: "巴哥犬" },
+  corgi: { en: "Welsh Corgi", zh: "威尔士柯基" },
+  goldenRetriever: { en: "Golden Retriever", zh: "金毛寻回犬" },
+  labradorRetriever: { en: "Labrador Retriever", zh: "拉布拉多" },
+  beagle: { en: "Beagle", zh: "比格犬" },
+  borderCollie: { en: "Border Collie", zh: "边境牧羊犬" },
+  samoyed: { en: "Samoyed", zh: "萨摩耶" },
+  papillon: { en: "Papillon", zh: "蝴蝶犬" },
+  shihTzu: { en: "Shih Tzu", zh: "西施犬" },
+  jackRussellTerrier: { en: "Jack Russell Terrier", zh: "杰克罗素梗" },
+  minPin: { en: "Miniature Pinscher", zh: "迷你杜宾" },
+  italianGreyhound: { en: "Italian Greyhound", zh: "意大利灵缇" },
+  cavalier: { en: "Cavalier", zh: "查理王小猎犬" },
+  sheltie: { en: "Shetland Sheepdog", zh: "喜乐蒂牧羊犬" },
+  akita: { en: "Akita", zh: "秋田犬" },
+  husky: { en: "Husky", zh: "哈士奇" },
+  berneseMountainDog: { en: "Bernese Mountain Dog", zh: "伯恩山犬" },
+  mixed: { en: "Mixed breed", zh: "混种犬" },
+};
+
+function getLabel(
+  item: { labelKo: string; labelJa: string },
+  lang: Language,
+  key?: string
+) {
+  if (lang === "ko") return item.labelKo;
+  if (lang === "ja") return item.labelJa;
+
+  if (key && breedLabelMap[key]) {
+    return lang === "en" ? breedLabelMap[key].en : breedLabelMap[key].zh;
+  }
+
+  return pickText(lang, item.labelKo, item.labelJa);
+}
+
+function getOptionLabel(
+  item: { ko: string; ja: string; en?: string; zh?: string },
+  lang: Language
+) {
+  if (lang === "ko") return item.ko;
+  if (lang === "ja") return item.ja;
+  if (lang === "en" && item.en) return item.en;
+  if (lang === "zh" && item.zh) return item.zh;
+  return pickText(lang, item.ko, item.ja);
+}
+
 
 type WeatherData = {
   temperature: number;
   windSpeed: number;
   cloudCover: number;
   radiation: number;
+  humidity?: number;
+  precipitation?: number;
+  recentPrecipitation?: number;
+  weatherCode?: number;
   recentSunFactor?: number;
   uvIndex?: number;
   airQualityIndex?: number;
@@ -217,6 +1244,10 @@ type HourlyWeather = {
   windSpeed: number;
   cloudCover: number;
   radiation: number;
+  humidity?: number;
+  precipitation?: number;
+  recentPrecipitation?: number;
+  weatherCode?: number;
   recentSunFactor?: number;
   uvIndex?: number;
   airQualityIndex?: number;
@@ -258,6 +1289,34 @@ type FavoriteVet = {
   phone: string;
   address: string;
   openingHours: string;
+  memo: string;
+};
+
+type DailyWalkRecord = {
+  walked: boolean;
+  minutes: number;
+  poop: boolean;
+  pee: boolean;
+  drankWater: boolean;
+  condition: "good" | "normal" | "bad";
+  memo: string;
+  savedAt: string;
+};
+
+type DogSensitivity = {
+  heatWeak: boolean;
+  coldWeak: boolean;
+  brachycephalic: boolean;
+  senior: boolean;
+  overweight: boolean;
+  heartRespiratory: boolean;
+  sensitivePaws: boolean;
+};
+
+type FavoritePlace = {
+  id: string;
+  name: string;
+  query: string;
   memo: string;
 };
 
@@ -330,79 +1389,61 @@ type DogProfile = {
 
 function getText(lang: Language) {
   return {
-    appName: "ワン歩チェック",
-    title: lang === "ko" ? "산책해도댕?" : "散歩行けるワン？",
-    setupTitle: lang === "ko" ? "산책해도댕?" : "散歩行けるワン？",
+    appName: lang === "en" ? "Wanpo Check" : lang === "zh" ? "汪步Check" : "ワン歩チェック",
+    title: pickText(lang, "산책해도댕?", "散歩行けるワン？"),
+    setupTitle: pickText(lang, "산책해도댕?", "散歩行けるワン？"),
     setupSubtitle:
-      lang === "ko"
-        ? "먼저 우리 강아지 정보를 등록해볼게요."
-        : "まずはワンちゃんの情報を登録しましょう。",
-    dogName: lang === "ko" ? "강아지 이름" : "ワンちゃんの名前",
-    dogNamePlaceholder: lang === "ko" ? "예: 쿠키" : "例：ポチ",
-    breed: lang === "ko" ? "강아지 종류" : "犬種",
-    start: lang === "ko" ? "시작하기" : "はじめる",
-    languageButton: lang === "ko" ? "日本語" : "한국어",
-    todayCheck: lang === "ko" ? "오늘의 산책 체크" : "今日のお散歩チェック",
+      pickText(lang, "먼저 우리 강아지 정보를 등록해볼게요.", "まずはワンちゃんの情報を登録しましょう。"),
+    dogName: pickText(lang, "강아지 이름", "ワンちゃんの名前"),
+    dogNamePlaceholder: pickText(lang, "예: 쿠키", "例：ポチ"),
+    breed: pickText(lang, "강아지 종류", "犬種"),
+    start: pickText(lang, "시작하기", "はじめる"),
+    languageButton: lang === "ko" ? "日本語" : lang === "ja" ? "English" : lang === "en" ? "中文" : "한국어",
+    todayCheck: pickText(lang, "오늘의 산책 체크", "今日のお散歩チェック"),
     nowWalkQuestion:
-      lang === "ko" ? "는 지금 산책해도댕?" : "、今お散歩行けるワン？",
+      pickText(lang, "는 지금 산책해도댕?", "、今お散歩行けるワン？"),
     resetProfile:
-      lang === "ko" ? "강아지 정보 다시 설정" : "ワンちゃん情報を再設定",
-    locationWeather: lang === "ko" ? "현재 위치/날씨" : "現在地/天気",
-    currentTemp: lang === "ko" ? "현재 기온" : "現在気温",
-    wind: lang === "ko" ? "풍속" : "風速",
-    cloud: lang === "ko" ? "구름" : "雲量",
-    radiation: lang === "ko" ? "일사량" : "日射量",
-    uvIndex: lang === "ko" ? "자외선" : "UV指数",
-    airQuality: lang === "ko" ? "대기질" : "空気質",
-    pm25: lang === "ko" ? "초미세먼지" : "PM2.5",
-    groundTemp: lang === "ko" ? "예상 지면온도" : "予想路面温度",
-    surface: lang === "ko" ? "바닥 종류" : "地面の種類",
-    sun: lang === "ko" ? "햇빛 상태" : "日差し",
-    recommendedTime: lang === "ko" ? "추천 산책 시간" : "おすすめ時間",
-    handTest: lang === "ko" ? "손등 7초 테스트" : "手の甲7秒テスト",
+      pickText(lang, "강아지 정보 다시 설정", "ワンちゃん情報を再設定"),
+    locationWeather: pickText(lang, "현재 위치/날씨", "現在地/天気"),
+    currentTemp: pickText(lang, "현재 기온", "現在気温"),
+    wind: pickText(lang, "풍속", "風速"),
+    cloud: pickText(lang, "구름", "雲量"),
+    radiation: pickText(lang, "일사량", "日射量"),
+    uvIndex: pickText(lang, "자외선", "UV指数"),
+    airQuality: pickText(lang, "대기질", "空気質"),
+    pm25: pickText(lang, "초미세먼지", "PM2.5"),
+    groundTemp: pickText(lang, "예상 지면온도", "予想路面温度"),
+    surface: pickText(lang, "바닥 종류", "地面の種類"),
+    sun: pickText(lang, "햇빛 상태", "日差し"),
+    recommendedTime: pickText(lang, "추천 산책 시간", "おすすめ時間"),
+    handTest: pickText(lang, "손등 7초 테스트", "手の甲7秒テスト"),
     handTestDesc:
-      lang === "ko"
-        ? "산책 전, 손등을 지면에 대고 7초 동안 버틸 수 있는지 확인해보세요."
-        : "手の甲を地面に7秒つけて確認しましょう。",
+      pickText(lang, "산책 전, 손등을 지면에 대고 7초 동안 버틸 수 있는지 확인해보세요.", "手の甲を地面に7秒つけて確認しましょう。"),
     handTestRunning:
-      lang === "ko"
-        ? "손등을 지면에 대고 유지해주세요."
-        : "手の甲を地面につけたままにしてください。",
+      pickText(lang, "손등을 지면에 대고 유지해주세요.", "手の甲を地面につけたままにしてください。"),
     handTestDone:
-      lang === "ko"
-        ? "7초 동안 괜찮았다면 산책 가능성이 높아요. 그래도 강아지 상태를 보면서 짧게 시작해주세요."
-        : "7秒大丈夫なら可能性あり。様子を見て短めに。",
-    timerStart: lang === "ko" ? "시작" : "開始",
-    timerReset: lang === "ko" ? "리셋" : "リセット",
-    loading: lang === "ko" ? "잠시만 기다려주세요..." : "少々お待ちください...",
+      pickText(lang, "7초 동안 괜찮았다면 산책 가능성이 높아요. 그래도 강아지 상태를 보면서 짧게 시작해주세요.", "7秒大丈夫なら可能性あり。様子を見て短めに。"),
+    timerStart: pickText(lang, "시작", "開始"),
+    timerReset: pickText(lang, "리셋", "リセット"),
+    loading: pickText(lang, "잠시만 기다려주세요...", "少々お待ちください..."),
     needName:
-      lang === "ko"
-        ? "강아지 이름을 입력해주세요."
-        : "ワンちゃんの名前を入力してください。",
+      pickText(lang, "강아지 이름을 입력해주세요.", "ワンちゃんの名前を入力してください。"),
     cautionTitle:
-      lang === "ko" ? "산책 전 꼭 확인해주세요" : "お散歩前の確認",
+      pickText(lang, "산책 전 꼭 확인해주세요", "お散歩前の確認"),
     cautionMain:
-      lang === "ko"
-        ? "이 앱의 지면온도는 실제 측정값이 아니라 날씨, 일사량, 바닥 종류를 바탕으로 계산한 추정값입니다."
-        : "路面温度は実測値ではなく、天気・日射量・地面からの推定値です。",
+      pickText(lang, "이 앱의 지면온도는 실제 측정값이 아니라 날씨, 일사량, 바닥 종류를 바탕으로 계산한 추정값입니다.", "路面温度は実測値ではなく、天気・日射量・地面からの推定値です。"),
     cautionSub:
-      lang === "ko"
-        ? "산책 전 손등 7초 테스트와 강아지의 호흡, 걸음걸이, 컨디션을 함께 확인해주세요."
-        : "手の甲7秒テストと、呼吸・歩き方・体調も確認してください。",
+      pickText(lang, "산책 전 손등 7초 테스트와 강아지의 호흡, 걸음걸이, 컨디션을 함께 확인해주세요.", "手の甲7秒テストと、呼吸・歩き方・体調も確認してください。"),
     tempGuideTitle:
-      lang === "ko" ? "강아지 산책 지면온도 기준" : "お散歩の路面温度目安",
+      pickText(lang, "강아지 산책 지면온도 기준", "お散歩の路面温度目安"),
     guideSourceNote:
-      lang === "ko"
-        ? "참고: 수의사 및 동물보호단체의 고온 포장도로 주의 권장사항과 손등 7초 테스트를 바탕으로 한 앱용 참고 기준입니다."
-        : "参考：獣医師・動物保護団体の高温舗装路への注意喚起と手の甲7秒テストをもとにした目安です。",
-    shareTitle: lang === "ko" ? "앱 공유하기" : "アプリを共有する",
+      pickText(lang, "참고: 수의사 및 동물보호단체의 고온 포장도로 주의 권장사항과 손등 7초 테스트를 바탕으로 한 앱용 참고 기준입니다.", "参考：獣医師・動物保護団体の高温舗装路への注意喚起と手の甲7秒テストをもとにした目安です。"),
+    shareTitle: pickText(lang, "앱 공유하기", "アプリを共有する"),
     shareDescription:
-      lang === "ko"
-        ? "여름철 강아지 산책 가능 여부를 날씨와 예상 지면온도로 확인할 수 있는 앱입니다."
-        : "天気と予想路面温度から安全度を確認できます。",
-    copyIntro: lang === "ko" ? "소개문 복사" : "紹介文をコピー",
-    shareButton: lang === "ko" ? "공유하기" : "共有する",
-    copied: lang === "ko" ? "복사했어요" : "コピーしました",
+      pickText(lang, "여름철 강아지 산책 가능 여부를 날씨와 예상 지면온도로 확인할 수 있는 앱입니다.", "天気と予想路面温度から安全度を確認できます。"),
+    copyIntro: pickText(lang, "소개문 복사", "紹介文をコピー"),
+    shareButton: pickText(lang, "공유하기", "共有する"),
+    copied: pickText(lang, "복사했어요", "コピーしました"),
   };
 }
 
@@ -455,6 +1496,172 @@ function calculateRecentSunFactor(
   }, 0);
 }
 
+function calculateRecentPrecipitation(
+  precipitations: Array<number | null | undefined>,
+  targetIndex: number
+) {
+  if (targetIndex < 0) {
+    return 0;
+  }
+
+  // 현재 시간과 직전 3시간의 강수량을 봅니다.
+  // 비가 막 그쳤더라도 노면이 젖어 있으면 지면온도가 빨리 낮아지는 효과를 반영합니다.
+  const weights = [1, 0.75, 0.5, 0.25];
+
+  const weightedRain = weights.reduce((total, weight, offset) => {
+    const index = targetIndex - offset;
+    const precipitation = index >= 0 ? precipitations[index] ?? 0 : 0;
+    return total + Math.max(precipitation, 0) * weight;
+  }, 0);
+
+  return Math.round(weightedRain * 10) / 10;
+}
+
+function isWetWeatherCode(weatherCode: number | undefined) {
+  if (weatherCode === undefined) return false;
+
+  return (
+    (weatherCode >= 51 && weatherCode <= 67) ||
+    (weatherCode >= 71 && weatherCode <= 77) ||
+    (weatherCode >= 80 && weatherCode <= 82) ||
+    weatherCode >= 95
+  );
+}
+
+function isHeavyRainCode(weatherCode: number | undefined) {
+  if (weatherCode === undefined) return false;
+
+  return weatherCode === 65 || weatherCode === 67 || weatherCode === 82 || weatherCode >= 95;
+}
+
+function getWetSurfaceCap(surface: SurfaceType, activeRain: boolean, heavyRain: boolean) {
+  if (heavyRain) {
+    if (surface === "grass") return 1;
+    return 2;
+  }
+
+  if (activeRain) {
+    if (surface === "asphalt") return 4;
+    if (surface === "concrete") return 3;
+    if (surface === "pavingBlock") return 3;
+    return 1;
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
+function getWeatherConditionLabel(weatherCode: number | undefined, lang: Language) {
+  if (weatherCode === undefined) return "-";
+
+  if (weatherCode === 0) {
+    return multiText(lang, "맑음", "晴れ", "Clear", "晴朗");
+  }
+
+  if (weatherCode === 1 || weatherCode === 2 || weatherCode === 3) {
+    return multiText(lang, "구름", "くもり", "Cloudy", "多云");
+  }
+
+  if (weatherCode === 45 || weatherCode === 48) {
+    return multiText(lang, "안개", "霧", "Fog", "雾");
+  }
+
+  if (weatherCode >= 51 && weatherCode <= 57) {
+    return multiText(lang, "이슬비", "霧雨", "Drizzle", "毛毛雨");
+  }
+
+  if (weatherCode >= 61 && weatherCode <= 67) {
+    return multiText(lang, "비", "雨", "Rain", "下雨");
+  }
+
+  if (weatherCode >= 71 && weatherCode <= 77) {
+    return multiText(lang, "눈", "雪", "Snow", "下雪");
+  }
+
+  if (weatherCode >= 80 && weatherCode <= 82) {
+    return multiText(lang, "소나기", "にわか雨", "Showers", "阵雨");
+  }
+
+  if (weatherCode >= 95) {
+    return multiText(lang, "천둥/폭우", "雷雨", "Thunderstorm", "雷雨");
+  }
+
+  return multiText(lang, "날씨", "天気", "Weather", "天气");
+}
+
+function getWeatherCautionMessage(weather: WeatherData | null, lang: Language) {
+  if (!weather) {
+    return null;
+  }
+
+  const precipitation = weather.precipitation ?? 0;
+  const recentPrecipitation = weather.recentPrecipitation ?? 0;
+  const windSpeed = weather.windSpeed ?? 0;
+  const weatherCode = weather.weatherCode;
+  const thunderstorm = weatherCode !== undefined && weatherCode >= 95;
+  const heavyRain = precipitation >= 6 || recentPrecipitation >= 8 || isHeavyRainCode(weatherCode);
+  const strongWind = windSpeed >= 30;
+  const windy = windSpeed >= 18;
+  const wetRoad = precipitation > 0 || recentPrecipitation >= 0.5 || isWetWeatherCode(weatherCode);
+
+  if (thunderstorm || heavyRain || strongWind) {
+    return {
+      label: multiText(lang, "기상 주의 높음", "気象注意 高め", "High weather caution", "天气风险较高"),
+      className: "bg-red-100 text-red-700",
+      detail: multiText(
+        lang,
+        "폭우·강풍·천둥 가능성이 있어요. 지면은 식어도 산책 자체는 위험할 수 있어요.",
+        "大雨・強風・雷の可能性があります。路面は冷えても散歩自体は危険な場合があります。",
+        "Heavy rain, strong wind, or thunder is possible. The ground may cool down, but walking itself can be unsafe.",
+        "可能有大雨、强风或雷雨。地面会降温，但外出遛狗本身可能不安全。"
+      ),
+    };
+  }
+
+  if (wetRoad && windy) {
+    return {
+      label: multiText(lang, "비바람 주의", "雨風に注意", "Rain and wind caution", "注意风雨"),
+      className: "bg-orange-100 text-orange-700",
+      detail: multiText(
+        lang,
+        "젖은 노면과 바람 때문에 미끄러움·체온 저하를 조심해주세요.",
+        "濡れた路面と風で、すべりや体温低下に注意してください。",
+        "Wet ground and wind can increase slipping and chill risk.",
+        "路面湿滑且有风，要注意滑倒和体温下降。"
+      ),
+    };
+  }
+
+  if (wetRoad) {
+    return {
+      label: multiText(lang, "노면 젖음", "路面濡れ", "Wet ground", "地面潮湿"),
+      className: "bg-sky-100 text-sky-700",
+      detail: multiText(
+        lang,
+        "비 때문에 지면온도는 낮아질 수 있지만, 미끄럼과 발 피부 트러블을 확인해주세요.",
+        "雨で路面温度は下がりやすいですが、すべりや足裏のトラブルに注意しましょう。",
+        "Rain can lower ground temperature, but check for slippery surfaces and paw irritation.",
+        "下雨会降低地面温度，但也要注意打滑和脚掌不适。"
+      ),
+    };
+  }
+
+  if (windy) {
+    return {
+      label: multiText(lang, "바람 강함", "風強め", "Windy", "风较大"),
+      className: "bg-indigo-100 text-indigo-700",
+      detail: multiText(
+        lang,
+        "바람이 강해서 지면 가열은 줄어들 수 있지만, 작은 강아지는 무리하지 않는 게 좋아요.",
+        "風で路面の加熱は抑えられますが、小型犬は無理しない方が安心です。",
+        "Wind can reduce ground heating, but small dogs may still struggle.",
+        "风会抑制地面升温，但小型犬还是不要勉强。"
+      ),
+    };
+  }
+
+  return null;
+}
+
 function calculateGroundTemperature(
   airTemperature: number,
   surface: SurfaceType,
@@ -468,27 +1675,55 @@ function calculateGroundTemperature(
   const cloudCover = weather ? clampNumber(weather.cloudCover, 0, 100) : 0;
   const windSpeed = weather ? Math.max(weather.windSpeed, 0) : 0;
   const uvIndex = weather?.uvIndex ?? 0;
+  const precipitation = Math.max(weather?.precipitation ?? 0, 0);
+  const recentPrecipitation = Math.max(weather?.recentPrecipitation ?? 0, 0);
+  const weatherCode = weather?.weatherCode;
   const recentSunFactor = clampNumber(weather?.recentSunFactor ?? radiationFactor, 0, 1);
 
-  // 기본 온도: 공기 온도 + 바닥 자체 저장열 - 바람에 의한 표면 냉각
-  const windCooling = Math.min(windSpeed * 0.18, 3.5);
-  const baseTemperature =
-    airTemperature + surfaceHeat.storedHeat - windCooling;
+  const rainingNow = precipitation > 0 || isWetWeatherCode(weatherCode);
+  const heavyRain = precipitation >= 3 || recentPrecipitation >= 5 || isHeavyRainCode(weatherCode);
+  const wetnessFactor = clampNumber(
+    precipitation * 0.55 + recentPrecipitation * 0.28 + (rainingNow ? 0.65 : 0),
+    0,
+    1.6
+  );
 
-  // 구름은 현재 햇빛 가열을 약하게 만들지만, 직사광선/그늘 순서를 뒤집지 않도록 제한합니다.
+  // 바람은 표면을 식히고, 강풍일수록 햇빛 가열도 덜 쌓이게 합니다.
+  const windCooling = Math.min(windSpeed * 0.2, 6);
+  const windSolarDamping =
+    windSpeed >= 35 ? 0.45 : windSpeed >= 25 ? 0.6 : windSpeed >= 15 ? 0.78 : 1;
+
+  // 비와 젖은 노면은 바닥 저장열과 낮 동안 쌓인 잔열을 강하게 줄입니다.
+  const wetCooling = Math.min(wetnessFactor * 4.5, 7.2);
+  const drySurfaceFactor = clampNumber(1 - wetnessFactor * 0.55, 0.08, 1);
+  const dryMemoryFactor = clampNumber(1 - wetnessFactor * 0.72, 0.03, 1);
+
+  const baseTemperature =
+    airTemperature + surfaceHeat.storedHeat * drySurfaceFactor - windCooling - wetCooling;
+
+  // 구름, 강풍, 젖은 노면은 현재 햇빛 가열을 약하게 만듭니다.
   const cloudDamping = 1 - (cloudCover / 100) * 0.35;
+  const wetSolarDamping = clampNumber(1 - wetnessFactor * 0.48, 0.08, 1);
 
   const calculateByExposure = (exposure: number, shadeCooling: number) => {
     const currentSolarHeating =
-      surfaceHeat.maxSolarHeat * radiationFactor * cloudDamping * exposure;
+      surfaceHeat.maxSolarHeat *
+      radiationFactor *
+      cloudDamping *
+      windSolarDamping *
+      wetSolarDamping *
+      exposure;
     const uvHeating =
-      Math.min(uvIndex * 0.25, 2.5) * radiationFactor * cloudDamping * exposure;
+      Math.min(uvIndex * 0.25, 2.5) *
+      radiationFactor *
+      cloudDamping *
+      windSolarDamping *
+      wetSolarDamping *
+      exposure;
 
-    // 직전 몇 시간 햇빛 누적에 의한 바닥 잔열.
-    // 현재 일사량이 0에 가까운 해질녘에도, 이전 햇빛이 강했다면 천천히 식도록 반영합니다.
     const exposureMemory = 0.35 + exposure * 0.65;
     const storedSolarHeating =
-      surfaceHeat.thermalMemoryHeat * recentSunFactor * exposureMemory;
+      surfaceHeat.thermalMemoryHeat * recentSunFactor * exposureMemory * dryMemoryFactor;
 
     return Math.round(
       baseTemperature +
@@ -499,20 +1734,24 @@ function calculateGroundTemperature(
     );
   };
 
-  const shadeTemperature = calculateByExposure(0.08, 0.8);
+  const wetCap = getWetSurfaceCap(surface, rainingNow || recentPrecipitation >= 0.5, heavyRain);
+  const applyWetCap = (temp: number) => Math.round(Math.min(temp, airTemperature + wetCap));
+
+  const shadeTemperature = applyWetCap(calculateByExposure(0.08, rainingNow ? 0.2 : 0.8));
   const partialTemperature = Math.max(
     shadeTemperature,
-    calculateByExposure(0.45, 0.3)
+    applyWetCap(calculateByExposure(0.45, rainingNow ? 0.1 : 0.3))
   );
   const directTemperature = Math.max(
     partialTemperature,
-    calculateByExposure(1, 0)
+    applyWetCap(calculateByExposure(1, 0))
   );
 
   if (sun === "direct") return directTemperature;
   if (sun === "partial") return partialTemperature;
   return shadeTemperature;
 }
+
 function getAirQualityValues(
   airQualityData: OpenMeteoAirQualityData | null,
   time: string
@@ -571,12 +1810,12 @@ function getAirQualityLabel(value: number | undefined, lang: Language) {
     return "-";
   }
 
-  if (value <= 20) return lang === "ko" ? "좋음" : "良い";
-  if (value <= 40) return lang === "ko" ? "보통" : "普通";
-  if (value <= 60) return lang === "ko" ? "주의" : "注意";
-  if (value <= 80) return lang === "ko" ? "나쁨" : "悪い";
-  if (value <= 100) return lang === "ko" ? "매우 나쁨" : "非常に悪い";
-  return lang === "ko" ? "위험" : "危険";
+  if (value <= 20) return pickText(lang, "좋음", "良い");
+  if (value <= 40) return pickText(lang, "보통", "普通");
+  if (value <= 60) return pickText(lang, "주의", "注意");
+  if (value <= 80) return pickText(lang, "나쁨", "悪い");
+  if (value <= 100) return pickText(lang, "매우 나쁨", "非常に悪い");
+  return pickText(lang, "위험", "危険");
 }
 
 function getUvLabel(value: number | undefined, lang: Language) {
@@ -584,11 +1823,11 @@ function getUvLabel(value: number | undefined, lang: Language) {
     return "-";
   }
 
-  if (value < 3) return lang === "ko" ? "낮음" : "低い";
-  if (value < 6) return lang === "ko" ? "보통" : "中程度";
-  if (value < 8) return lang === "ko" ? "높음" : "高い";
-  if (value < 11) return lang === "ko" ? "매우 높음" : "非常に高い";
-  return lang === "ko" ? "위험" : "危険";
+  if (value < 3) return pickText(lang, "낮음", "低い");
+  if (value < 6) return pickText(lang, "보통", "中程度");
+  if (value < 8) return pickText(lang, "높음", "高い");
+  if (value < 11) return pickText(lang, "매우 높음", "非常に高い");
+  return pickText(lang, "위험", "危険");
 }
 
 function getPm25Label(value: number | undefined, lang: Language) {
@@ -596,10 +1835,10 @@ function getPm25Label(value: number | undefined, lang: Language) {
     return "-";
   }
 
-  if (value <= 9) return lang === "ko" ? "낮음" : "低い";
-  if (value <= 35) return lang === "ko" ? "보통" : "普通";
-  if (value <= 55) return lang === "ko" ? "높음" : "高い";
-  return lang === "ko" ? "매우 높음" : "非常に高い";
+  if (value <= 9) return pickText(lang, "낮음", "低い");
+  if (value <= 35) return pickText(lang, "보통", "普通");
+  if (value <= 55) return pickText(lang, "높음", "高い");
+  return pickText(lang, "매우 높음", "非常に高い");
 }
 
 
@@ -657,22 +1896,18 @@ function getVetServiceInfo(
 
   if (hasStrictTwentyFourHourMark) {
     return {
-      serviceLabel: lang === "ko" ? "24시간 표시 후보" : "24時間表示あり",
+      serviceLabel: pickText(lang, "24시간 표시 후보", "24時間表示あり"),
       serviceClassName: "bg-green-100 text-green-700",
       note:
-        lang === "ko"
-          ? "공개 지도 데이터에 24시간 표시가 있는 후보예요. 실제 진료 가능 여부는 정보확인에서 반드시 확인해주세요."
-          : "公開地図データに24時間表示がある候補です。実際の診療可否は情報確認で必ずご確認ください。",
+        pickText(lang, "공개 지도 데이터에 24시간 표시가 있는 후보예요. 실제 진료 가능 여부는 정보확인에서 반드시 확인해주세요.", "公開地図データに24時間表示がある候補です。実際の診療可否は情報確認で必ずご確認ください。"),
     };
   }
 
   return {
-    serviceLabel: lang === "ko" ? "제외" : "除外",
+    serviceLabel: pickText(lang, "제외", "除外"),
     serviceClassName: "bg-slate-100 text-slate-700",
     note:
-      lang === "ko"
-        ? "24시간 표시가 없어 목록에서 제외되는 병원입니다."
-        : "24時間表示がないため一覧から除外されます。",
+      pickText(lang, "24시간 표시가 없어 목록에서 제외되는 병원입니다.", "24時間表示がないため一覧から除外されます。"),
   };
 }
 
@@ -692,13 +1927,13 @@ function normalizeVetClinic(
 
   const name =
     tags.name ||
-    (lang === "ko" ? "이름 미확인 동물병원" : "名称未確認の動物病院");
-  const address = getVetAddress(tags) || (lang === "ko" ? "주소 정보 없음" : "住所情報なし");
+    (pickText(lang, "이름 미확인 동물병원", "名称未確認の動物病院"));
+  const address = getVetAddress(tags) || (pickText(lang, "주소 정보 없음", "住所情報なし"));
   const phone =
     tags.phone || tags["contact:phone"] || tags["contact:mobile"] || "";
   const openingHours =
     tags.opening_hours ||
-    (lang === "ko" ? "영업시간 정보 없음" : "診療時間情報なし");
+    (pickText(lang, "영업시간 정보 없음", "診療時間情報なし"));
   const serviceInfo = getVetServiceInfo(tags, lang);
   const distanceKm = calculateDistanceKm(userLat, userLon, lat, lon);
 
@@ -728,6 +1963,214 @@ function formatDistanceText(distanceKm: number, lang: Language) {
   }
 
   return `${distanceKm.toFixed(1)}km`;
+}
+
+function getTodayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getDefaultWalkRecord(): DailyWalkRecord {
+  return {
+    walked: false,
+    minutes: 20,
+    poop: false,
+    pee: false,
+    drankWater: false,
+    condition: "normal",
+    memo: "",
+    savedAt: "",
+  };
+}
+
+function getDefaultSensitivity(): DogSensitivity {
+  return {
+    heatWeak: false,
+    coldWeak: false,
+    brachycephalic: false,
+    senior: false,
+    overweight: false,
+    heartRespiratory: false,
+    sensitivePaws: false,
+  };
+}
+
+function getSensitivityCount(sensitivity: DogSensitivity) {
+  return Object.values(sensitivity).filter(Boolean).length;
+}
+
+function getConditionLabel(condition: DailyWalkRecord["condition"], lang: Language) {
+  if (condition === "good") {
+    return multiText(lang, "좋음", "良い", "Good", "良好");
+  }
+  if (condition === "bad") {
+    return multiText(lang, "나쁨", "悪い", "Bad", "不好");
+  }
+  return multiText(lang, "보통", "普通", "Normal", "普通");
+}
+
+function getTimeSlotLevel(groundTemp: number, weather: HourlyWeather, lang: Language) {
+  const hasBadWeather = (weather.precipitation ?? 0) >= 2 || weather.windSpeed >= 30 || [95, 96, 99].includes(weather.weatherCode ?? 0);
+  if (hasBadWeather) {
+    return {
+      mark: "×",
+      label: multiText(lang, "피하기", "避ける", "Avoid", "避免"),
+      className: "bg-red-50 text-red-700",
+    };
+  }
+
+  if (groundTemp <= 33) {
+    return {
+      mark: "◎",
+      label: multiText(lang, "추천", "おすすめ", "Best", "推荐"),
+      className: "bg-green-50 text-green-700",
+    };
+  }
+
+  if (groundTemp <= 40) {
+    return {
+      mark: "○",
+      label: multiText(lang, "짧게", "短め", "Short", "短时"),
+      className: "bg-yellow-50 text-yellow-700",
+    };
+  }
+
+  if (groundTemp <= 45) {
+    return {
+      mark: "△",
+      label: multiText(lang, "주의", "注意", "Caution", "注意"),
+      className: "bg-orange-50 text-orange-700",
+    };
+  }
+
+  return {
+    mark: "×",
+    label: multiText(lang, "피하기", "避ける", "Avoid", "避免"),
+    className: "bg-red-50 text-red-700",
+  };
+}
+
+function getHealthAlertItems(dogProfile: DogProfile, lang: Language) {
+  const candidates = [
+    {
+      label: multiText(lang, "광견병 접종", "狂犬病ワクチン", "Rabies vaccine", "狂犬病疫苗"),
+      date: dogProfile.vaccination?.rabiesNextDate,
+    },
+    {
+      label: multiText(lang, "혼합백신", "混合ワクチン", "Combo vaccine", "混合疫苗"),
+      date: dogProfile.vaccination?.comboNextDate,
+    },
+    {
+      label: multiText(lang, "심장사상충약", "フィラリア薬", "Heartworm medicine", "心丝虫药"),
+      date: dogProfile.medication?.heartwormNextDate,
+    },
+    {
+      label: multiText(lang, "벼룩·진드기약", "ノミ・ダニ薬", "Flea/tick medicine", "跳蚤蜱虫药"),
+      date: dogProfile.medication?.fleaTickNextDate,
+    },
+  ];
+
+  return candidates.map((item) => {
+    if (!item.date) {
+      return {
+        ...item,
+        status: multiText(lang, "미입력", "未入力", "Not set", "未设置"),
+        className: "bg-slate-100 text-slate-600",
+      };
+    }
+
+    const target = new Date(item.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (Number.isNaN(diffDays)) {
+      return {
+        ...item,
+        status: multiText(lang, "확인 필요", "確認", "Check", "确认"),
+        className: "bg-slate-100 text-slate-600",
+      };
+    }
+
+    if (diffDays < 0) {
+      return {
+        ...item,
+        status: multiText(lang, "기한 지남", "期限切れ", "Overdue", "已过期"),
+        className: "bg-red-100 text-red-700",
+      };
+    }
+
+    if (diffDays <= 7) {
+      return {
+        ...item,
+        status: multiText(lang, `${diffDays}일 후`, `${diffDays}日後`, `${diffDays}d left`, `${diffDays}天后`),
+        className: "bg-amber-100 text-amber-700",
+      };
+    }
+
+    return {
+      ...item,
+      status: multiText(lang, `${diffDays}일 후`, `${diffDays}日後`, `${diffDays}d left`, `${diffDays}天后`),
+      className: "bg-green-100 text-green-700",
+    };
+  });
+}
+
+function getOneLineRecommendation(
+  lang: Language,
+  groundTemperature: number,
+  heatStress: { label: string; className: string; detail: string },
+  weatherCaution: { label: string; className: string; detail: string } | null,
+  sensitivity: DogSensitivity
+) {
+  const sensitivityCount = getSensitivityCount(sensitivity);
+
+  if (weatherCaution) {
+    return multiText(
+      lang,
+      `지면은 괜찮아도 날씨 주의가 있어요. ${weatherCaution.label} 상황이라 짧은 배변 산책만 추천해요.`,
+      `路面が大丈夫でも天気に注意です。${weatherCaution.label}のため、短いトイレ散歩がおすすめです。`,
+      `The ground may be okay, but weather needs caution. ${weatherCaution.label}: keep it to a short potty walk.`,
+      `地面可能没问题，但天气需要注意。${weatherCaution.label}，建议只短时间外出排便。`
+    );
+  }
+
+  if (heatStress.className.includes("red") || heatStress.className.includes("amber")) {
+    return multiText(
+      lang,
+      "지면온도만 보지 말고 더위 스트레스도 조심해요. 물과 그늘, 짧은 산책을 추천해요.",
+      "路面温度だけでなく暑さストレスにも注意。水分・日陰・短め散歩がおすすめです。",
+      "Watch heat stress, not just ground temperature. Bring water, use shade, and keep it short.",
+      "不只看地面温度，也要注意热压力。带水、走阴凉处、短时间散步更安全。"
+    );
+  }
+
+  if (groundTemperature >= 41) {
+    return multiText(
+      lang,
+      "발바닥이 뜨거울 수 있어요. 손등 7초 테스트 후 짧게만 다녀와요.",
+      "肉球には熱い可能性があります。手の甲7秒テスト後、短めにしましょう。",
+      "Pavement may be hot for paws. Do the 7-second hand test and keep it short.",
+      "地面可能会烫脚。先做手背7秒测试，再短时间散步。"
+    );
+  }
+
+  if (sensitivityCount > 0) {
+    return multiText(
+      lang,
+      "기본 조건은 괜찮지만 민감한 항목이 있어요. 평소보다 천천히, 짧게 시작해요.",
+      "基本条件は大丈夫ですが、注意項目があります。いつもよりゆっくり短めに始めましょう。",
+      "Conditions look okay, but your dog has sensitivity flags. Start slower and shorter than usual.",
+      "基本条件可以，但狗狗有敏感项目。比平时更慢、更短地开始吧。"
+    );
+  }
+
+  return multiText(
+    lang,
+    "지금은 산책하기 좋아요. 물과 배변봉투만 챙기면 출발해도댕!",
+    "今はお散歩しやすいです。水とマナー袋を持って出発ワン！",
+    "Looks like a good time for a walk. Grab water and poop bags—paw-sible!",
+    "现在适合散步。带上水和拾便袋，就可以出发汪！"
+  );
 }
 
 
@@ -785,54 +2228,42 @@ function normalizeDogFriendlySpot(
   const natural = tags.natural || "";
   const landuse = tags.landuse || "";
 
-  let kindLabel = lang === "ko" ? "산책 장소" : "お散歩スポット";
+  let kindLabel = pickText(lang, "산책 장소", "お散歩スポット");
   let kindClassName = "bg-slate-100 text-slate-700";
   let note =
-    lang === "ko"
-      ? "공개 지도 데이터 기반 산책 장소예요."
-      : "公開地図データにもとづく散歩スポットです。";
-  let fallbackName = lang === "ko" ? "이름 없는 산책 장소" : "名前未登録の散歩スポット";
+    pickText(lang, "공개 지도 데이터 기반 산책 장소예요.", "公開地図データにもとづく散歩スポットです。");
+  let fallbackName = pickText(lang, "이름 없는 산책 장소", "名前未登録の散歩スポット");
 
   if (leisure === "dog_park") {
-    kindLabel = lang === "ko" ? "도그 파크" : "ドッグパーク";
+    kindLabel = pickText(lang, "도그 파크", "ドッグパーク");
     kindClassName = "bg-blue-100 text-blue-700";
     note =
-      lang === "ko"
-        ? "강아지가 쉬거나 뛰놀기 좋은 도그 파크예요."
-        : "ワンちゃんが遊びやすいドッグパークです。";
-    fallbackName = lang === "ko" ? "근처 도그 파크" : "近くのドッグパーク";
+      pickText(lang, "강아지가 쉬거나 뛰놀기 좋은 도그 파크예요.", "ワンちゃんが遊びやすいドッグパークです。");
+    fallbackName = pickText(lang, "근처 도그 파크", "近くのドッグパーク");
   } else if (leisure === "park") {
-    kindLabel = lang === "ko" ? "공원" : "公園";
+    kindLabel = pickText(lang, "공원", "公園");
     kindClassName = "bg-green-100 text-green-700";
     note =
-      lang === "ko"
-        ? "가볍게 산책하기 좋은 근처 공원이에요."
-        : "気軽に散歩しやすい近くの公園です。";
-    fallbackName = lang === "ko" ? "근처 공원" : "近くの公園";
+      pickText(lang, "가볍게 산책하기 좋은 근처 공원이에요.", "気軽に散歩しやすい近くの公園です。");
+    fallbackName = pickText(lang, "근처 공원", "近くの公園");
   } else if (highway === "footway" || highway === "path" || highway === "pedestrian") {
-    kindLabel = lang === "ko" ? "산책로" : "散歩道";
+    kindLabel = pickText(lang, "산책로", "散歩道");
     kindClassName = "bg-amber-100 text-amber-700";
     note =
-      lang === "ko"
-        ? "걷기 좋은 길로 표시된 산책로예요."
-        : "歩きやすい道として登録された散歩道です。";
-    fallbackName = lang === "ko" ? "근처 산책로" : "近くの散歩道";
+      pickText(lang, "걷기 좋은 길로 표시된 산책로예요.", "歩きやすい道として登録された散歩道です。");
+    fallbackName = pickText(lang, "근처 산책로", "近くの散歩道");
   } else if (waterway === "riverbank" || natural === "water") {
-    kindLabel = lang === "ko" ? "강변 / 수변" : "川辺・水辺";
+    kindLabel = pickText(lang, "강변 / 수변", "川辺・水辺");
     kindClassName = "bg-sky-100 text-sky-700";
     note =
-      lang === "ko"
-        ? "강변이나 수변 주변 산책 후보예요."
-        : "川辺や水辺の散歩候補です。";
-    fallbackName = lang === "ko" ? "근처 강변길" : "近くの川辺";
+      pickText(lang, "강변이나 수변 주변 산책 후보예요.", "川辺や水辺の散歩候補です。");
+    fallbackName = pickText(lang, "근처 강변길", "近くの川辺");
   } else if (leisure === "garden" || landuse === "grass") {
-    kindLabel = lang === "ko" ? "녹지" : "緑地";
+    kindLabel = pickText(lang, "녹지", "緑地");
     kindClassName = "bg-emerald-100 text-emerald-700";
     note =
-      lang === "ko"
-        ? "잔디나 녹지 공간으로 표시된 곳이에요."
-        : "芝生や緑地として表示された場所です。";
-    fallbackName = lang === "ko" ? "근처 녹지" : "近くの緑地";
+      pickText(lang, "잔디나 녹지 공간으로 표시된 곳이에요.", "芝生や緑地として表示された場所です。");
+    fallbackName = pickText(lang, "근처 녹지", "近くの緑地");
   }
 
   const name = tags.name || fallbackName;
@@ -863,18 +2294,18 @@ type SeasonalRiskCard = {
 
 function getCurrentSeasonName(month: number, lang: Language) {
   if (month >= 3 && month <= 5) {
-    return lang === "ko" ? "봄" : "春";
+    return pickText(lang, "봄", "春");
   }
 
   if (month >= 6 && month <= 8) {
-    return lang === "ko" ? "여름" : "夏";
+    return pickText(lang, "여름", "夏");
   }
 
   if (month >= 9 && month <= 11) {
-    return lang === "ko" ? "가을" : "秋";
+    return pickText(lang, "가을", "秋");
   }
 
-  return lang === "ko" ? "겨울" : "冬";
+  return pickText(lang, "겨울", "冬");
 }
 
 function getSeasonalRiskCards(
@@ -890,19 +2321,13 @@ function getSeasonalRiskCards(
   const coldSeason = month === 12 || month <= 2;
 
   const tickCard: SeasonalRiskCard = {
-    title: lang === "ko" ? "진드기 / 벼룩" : "マダニ・ノミ",
+    title: multiText(lang, "진드기 / 벼룩", "マダニ・ノミ", "Ticks / Fleas", "蜱虫 / 跳蚤"),
     badge:
       rainySeason || peakSummer
-        ? lang === "ko"
-          ? "활동 높음"
-          : "活動高め"
+        ? multiText(lang, "활동 높음", "活動高め", "High activity", "活动较高")
         : warmSeason || autumnTickSeason
-          ? lang === "ko"
-            ? "주의"
-            : "注意"
-          : lang === "ko"
-            ? "낮음"
-            : "低め",
+          ? multiText(lang, "주의", "注意", "Caution", "注意")
+          : multiText(lang, "낮음", "低め", "Lower risk", "较低"),
     badgeClass:
       rainySeason || peakSummer
         ? "bg-red-100 text-red-700"
@@ -915,74 +2340,92 @@ function getSeasonalRiskCards(
         : warmSeason || autumnTickSeason
           ? "bg-amber-50"
           : "bg-green-50",
-    bullets:
-      lang === "ko"
-        ? [
-            rainySeason || peakSummer
-              ? "지금은 진드기·벼룩 활동이 활발한 시기예요. 풀숲, 강변, 수풀 산책은 특히 주의하세요."
-              : warmSeason || autumnTickSeason
-                ? "산책 후 발, 배, 겨드랑이, 귀 뒤를 꼭 확인해주세요."
-                : "겨울철에는 상대적으로 낮지만 실내외 이동이 많은 아이는 계속 확인이 필요해요.",
-            "벼룩·진드기 예방약 날짜를 놓치지 말고, 산책 후 브러싱을 해주세요.",
-          ]
-        : [
-            rainySeason || peakSummer
-              ? "今はマダニ・ノミが活発な時期です。草むら、川辺、茂みの散歩は特に注意しましょう。"
-              : warmSeason || autumnTickSeason
-                ? "散歩後は足、わき、耳の後ろ、お腹まわりを確認してください。"
-                : "冬は比較的低めですが、継続してチェックすると安心です。",
-            "予防薬の日付を忘れず、散歩後はブラッシングすると安心です。",
-          ],
+    bullets: [
+      rainySeason || peakSummer
+        ? multiText(
+            lang,
+            "지금은 진드기·벼룩 활동이 활발한 시기예요. 풀숲, 강변, 수풀 산책은 특히 주의하세요.",
+            "今はマダニ・ノミが活発な時期です。草むら、川辺、茂みの散歩は特に注意しましょう。",
+            "Ticks and fleas are more active right now. Be extra careful around grass, riversides, and bushes.",
+            "现在是蜱虫和跳蚤比较活跃的时期。草丛、河边、灌木附近散步要特别注意。"
+          )
+        : warmSeason || autumnTickSeason
+          ? multiText(
+              lang,
+              "산책 후 발, 배, 겨드랑이, 귀 뒤를 꼭 확인해주세요.",
+              "散歩後は足、わき、耳の後ろ、お腹まわりを確認してください。",
+              "After walks, check the paws, belly, armpits, and behind the ears.",
+              "散步后请检查脚爪、肚子、腋下和耳朵后面。"
+            )
+          : multiText(
+              lang,
+              "겨울철에는 상대적으로 낮지만 실내외 이동이 많은 아이는 계속 확인이 필요해요.",
+              "冬は比較的低めですが、継続してチェックすると安心です。",
+              "Risk is lower in winter, but regular checks are still reassuring, especially for dogs that go in and out often.",
+              "冬季风险相对较低，但经常外出的狗狗还是建议持续检查。"
+            ),
+      multiText(
+        lang,
+        "벼룩·진드기 예방약 날짜를 놓치지 말고, 산책 후 브러싱을 해주세요.",
+        "予防薬の日付を忘れず、散歩後はブラッシングすると安心です。",
+        "Keep flea/tick prevention on schedule, and brush your dog after walks.",
+        "别忘了跳蚤/蜱虫预防药的日期，散步后梳毛会更安心。"
+      ),
+    ],
   };
 
   const infectionCard: SeasonalRiskCard = {
-    title: lang === "ko" ? "감염병 / 유행성 질환" : "感染症・流行性疾患",
+    title: multiText(lang, "감염병 / 유행성 질환", "感染症・流行性疾患", "Infections / Seasonal illness", "感染病 / 流行性疾病"),
     badge:
       warmSeason
-        ? lang === "ko"
-          ? "주의"
-          : "注意"
-        : lang === "ko"
-          ? "기본 주의"
-          : "基本注意",
+        ? multiText(lang, "주의", "注意", "Caution", "注意")
+        : multiText(lang, "기본 주의", "基本注意", "Basic caution", "基本注意"),
     badgeClass: warmSeason ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-700",
     cardClass: warmSeason ? "bg-orange-50" : "bg-slate-50",
-    bullets:
-      lang === "ko"
-        ? [
-            rainySeason || peakSummer
-              ? "모기 활동이 늘어나는 시기라 심장사상충 예방을 놓치지 않는 것이 중요해요."
-              : "지역 상황에 따라 백신 및 예방약 스케줄을 꾸준히 확인해주세요.",
-            rainySeason
-              ? "비 온 뒤 고인 물, 젖은 흙길은 렙토스피라 등 위생 위험이 있을 수 있어요."
-              : "진드기 매개 감염병 예방을 위해 산책 후 몸 상태를 확인해주세요.",
-          ]
-        : [
-            rainySeason || peakSummer
-              ? "蚊が増える時期なので、フィラリア予防を忘れないことが大切です。"
-              : "地域状況に合わせてワクチン・予防薬の予定を確認してください。",
-            rainySeason
-              ? "雨上がりの水たまりや湿った土道は、衛生面に注意しましょう。"
-              : "マダニ媒介感染症予防のため、散歩後の体チェックが安心です。",
-          ],
+    bullets: [
+      rainySeason || peakSummer
+        ? multiText(
+            lang,
+            "모기 활동이 늘어나는 시기라 심장사상충 예방을 놓치지 않는 것이 중요해요.",
+            "蚊が増える時期なので、フィラリア予防を忘れないことが大切です。",
+            "Mosquito activity is increasing, so staying on schedule with heartworm prevention is important.",
+            "蚊子活动增多的季节，按时进行心丝虫预防很重要。"
+          )
+        : multiText(
+            lang,
+            "지역 상황에 따라 백신 및 예방약 스케줄을 꾸준히 확인해주세요.",
+            "地域状況に合わせてワクチン・予防薬の予定を確認してください。",
+            "Keep checking vaccination and prevention schedules according to your local situation.",
+            "请根据当地情况持续确认疫苗和预防药的时间安排。"
+          ),
+      rainySeason
+        ? multiText(
+            lang,
+            "비 온 뒤 고인 물, 젖은 흙길은 렙토스피라 등 위생 위험이 있을 수 있어요.",
+            "雨上がりの水たまりや湿った土道は、衛生面に注意しましょう。",
+            "After rain, puddles and wet ground may carry hygiene risks such as leptospirosis.",
+            "雨后积水和潮湿地面可能存在钩端螺旋体等卫生风险。"
+          )
+        : multiText(
+            lang,
+            "진드기 매개 감염병 예방을 위해 산책 후 몸 상태를 확인해주세요.",
+            "マダニ媒介感染症予防のため、散歩後の体チェックが安心です。",
+            "Check your dog after walks to help prevent tick-borne infections.",
+            "散步后检查狗狗身体，有助于预防蜱虫传播疾病。"
+          ),
+    ],
   };
 
   const heatDanger = groundTemperature >= 46 || (weather?.temperature ?? 0) >= 30;
   const heatWarning = groundTemperature >= 41 || (weather?.temperature ?? 0) >= 26;
 
   const heatCard: SeasonalRiskCard = {
-    title: lang === "ko" ? "더위 / 열사병 / 아스팔트" : "暑さ・熱中症・アスファルト",
+    title: multiText(lang, "더위 / 열사병 / 아스팔트", "暑さ・熱中症・アスファルト", "Heat / Heatstroke / Asphalt", "炎热 / 中暑 / 沥青路面"),
     badge: heatDanger
-      ? lang === "ko"
-        ? "위험"
-        : "危険"
+      ? multiText(lang, "위험", "危険", "Danger", "危险")
       : heatWarning
-        ? lang === "ko"
-          ? "주의"
-          : "注意"
-        : lang === "ko"
-          ? "확인"
-          : "確認",
+        ? multiText(lang, "주의", "注意", "Caution", "注意")
+        : multiText(lang, "확인", "確認", "Check", "确认"),
     badgeClass: heatDanger
       ? "bg-red-100 text-red-700"
       : heatWarning
@@ -993,36 +2436,40 @@ function getSeasonalRiskCards(
       : heatWarning
         ? "bg-amber-50"
         : "bg-green-50",
-    bullets:
-      lang === "ko"
-        ? [
-            `현재 예상 지면온도 ${groundTemperature}℃ 기준으로, 짧은 산책이라도 발바닥과 호흡 상태를 꼭 확인해주세요.`,
-            heatDanger
-              ? "한낮 산책보다 이른 아침 또는 해진 뒤 산책이 더 안전해요."
-              : "산책 중 물, 그늘, 휴식 시간을 충분히 챙겨주세요.",
-          ]
-        : [
-            `現在の予想路面温度 ${groundTemperature}℃ を目安に、肉球と呼吸状態を確認してください。`,
-            heatDanger
-              ? "日中よりも早朝や日没後のお散歩が安全です。"
-              : "散歩中は水分、日陰、休憩をしっかり確保しましょう。",
-          ],
+    bullets: [
+      multiText(
+        lang,
+        `현재 예상 지면온도 ${groundTemperature}℃ 기준으로, 짧은 산책이라도 발바닥과 호흡 상태를 꼭 확인해주세요.`,
+        `現在の予想路面温度 ${groundTemperature}℃ を目安に、肉球と呼吸状態を確認してください。`,
+        `With an estimated ground temperature of ${groundTemperature}℃, check paws and breathing even on short walks.`,
+        `当前预计地面温度为 ${groundTemperature}℃，即使短时间散步也请确认脚垫和呼吸状态。`
+      ),
+      heatDanger
+        ? multiText(
+            lang,
+            "한낮 산책보다 이른 아침 또는 해진 뒤 산책이 더 안전해요.",
+            "日中よりも早朝や日没後のお散歩が安全です。",
+            "Early morning or after sunset is safer than midday walks.",
+            "比起中午，清晨或日落后散步更安全。"
+          )
+        : multiText(
+            lang,
+            "산책 중 물, 그늘, 휴식 시간을 충분히 챙겨주세요.",
+            "散歩中は水分、日陰、休憩をしっかり確保しましょう。",
+            "Bring water, use shade, and take enough breaks during walks.",
+            "散步时请准备饮水、选择阴凉处，并安排足够休息。"
+          ),
+    ],
   };
 
   const severeWeatherCard: SeasonalRiskCard = {
-    title: lang === "ko" ? "비 / 태풍 / 폭염 / 한파" : "雨・台風・猛暑・寒波",
+    title: multiText(lang, "비 / 태풍 / 폭염 / 한파", "雨・台風・猛暑・寒波", "Rain / Typhoon / Heatwave / Cold wave", "雨天 / 台风 / 酷暑 / 寒潮"),
     badge:
       rainySeason || peakSummer
-        ? lang === "ko"
-          ? "계절 주의"
-          : "季節注意"
+        ? multiText(lang, "계절 주의", "季節注意", "Seasonal caution", "季节注意")
         : coldSeason
-          ? lang === "ko"
-            ? "한파 주의"
-            : "寒波注意"
-          : lang === "ko"
-            ? "기본 확인"
-            : "基本確認",
+          ? multiText(lang, "한파 주의", "寒波注意", "Cold caution", "寒潮注意")
+          : multiText(lang, "기본 확인", "基本確認", "Basic check", "基本确认"),
     badgeClass:
       rainySeason || peakSummer
         ? "bg-sky-100 text-sky-700"
@@ -1035,32 +2482,54 @@ function getSeasonalRiskCards(
         : coldSeason
           ? "bg-indigo-50"
           : "bg-slate-50",
-    bullets:
-      lang === "ko"
-        ? [
-            rainySeason
-              ? "장마철에는 젖은 노면, 미끄럼, 피부 트러블에 주의하고 산책 후 잘 말려주세요."
-              : peakSummer
-                ? "폭염 경보 수준의 더위에는 실외 산책 대신 실내 놀이를 고려해주세요."
-                : coldSeason
-                  ? "한파나 눈·얼음길에는 체온 유지와 미끄럼 사고를 조심해주세요."
-                  : "강풍·호우 예보가 있으면 실외 산책 대신 짧은 배변 산책을 고려해주세요.",
-            rainySeason || (weather?.windSpeed ?? 0) >= 12
-              ? "비바람이 강하거나 태풍 예보가 있으면 무리한 외출은 피하는 것이 좋아요."
-              : "출발 전 실시간 날씨와 노면 상태를 한 번 더 확인하면 더 안전해요.",
-          ]
-        : [
-            rainySeason
-              ? "梅雨時は濡れた路面、すべり、皮膚トラブルに注意し、帰宅後はよく乾かしましょう。"
-              : peakSummer
-                ? "猛暑レベルの日は屋外散歩より室内遊びを検討してください。"
-                : coldSeason
-                  ? "寒波や雪・凍結路面では体温低下と転倒に注意してください。"
-                  : "強風・大雨予報のときは短いトイレ散歩に切り替えるのも安心です。",
-            rainySeason || (weather?.windSpeed ?? 0) >= 12
-              ? "風雨が強い日や台風予報時は、無理なお出かけを避けるのがおすすめです。"
-              : "出発前に最新の天気と路面状態をもう一度確認しましょう。",
-          ],
+    bullets: [
+      rainySeason
+        ? multiText(
+            lang,
+            "장마철에는 젖은 노면, 미끄럼, 피부 트러블에 주의하고 산책 후 잘 말려주세요.",
+            "梅雨時は濡れた路面、すべり、皮膚トラブルに注意し、帰宅後はよく乾かしましょう。",
+            "During rainy season, watch for slippery surfaces and skin issues, and dry your dog well after walks.",
+            "雨季请注意湿滑路面和皮肤问题，回家后要帮狗狗充分擦干。"
+          )
+        : peakSummer
+          ? multiText(
+              lang,
+              "폭염 경보 수준의 더위에는 실외 산책 대신 실내 놀이를 고려해주세요.",
+              "猛暑レベルの日は屋外散歩より室内遊びを検討してください。",
+              "On heatwave-level days, consider indoor play instead of outdoor walks.",
+              "酷暑天气时，建议用室内游戏代替户外散步。"
+            )
+          : coldSeason
+            ? multiText(
+                lang,
+                "한파나 눈·얼음길에는 체온 유지와 미끄럼 사고를 조심해주세요.",
+                "寒波や雪・凍結路面では体温低下と転倒に注意してください。",
+                "In cold waves, snow, or icy roads, watch for body temperature drops and slipping.",
+                "寒潮、雪天或结冰路面时，请注意保暖和防滑。"
+              )
+            : multiText(
+                lang,
+                "강풍·호우 예보가 있으면 실외 산책 대신 짧은 배변 산책을 고려해주세요.",
+                "強風・大雨予報のときは短いトイレ散歩に切り替えるのも安心です。",
+                "If strong wind or heavy rain is forecast, a short potty walk may be safer.",
+                "如有强风或暴雨预报，可考虑只进行短时间排便散步。"
+              ),
+      rainySeason || (weather?.windSpeed ?? 0) >= 12
+        ? multiText(
+            lang,
+            "비바람이 강하거나 태풍 예보가 있으면 무리한 외출은 피하는 것이 좋아요.",
+            "風雨が強い日や台風予報時は、無理なお出かけを避けるのがおすすめです。",
+            "Avoid unnecessary outings when wind and rain are strong or a typhoon is forecast.",
+            "风雨较强或有台风预报时，建议避免勉强外出。"
+          )
+        : multiText(
+            lang,
+            "출발 전 실시간 날씨와 노면 상태를 한 번 더 확인하면 더 안전해요.",
+            "出発前に最新の天気と路面状態をもう一度確認しましょう。",
+            "Before leaving, check the latest weather and road surface once more.",
+            "出门前再确认一次最新天气和路面情况会更安全。"
+          ),
+    ],
   };
 
   return [tickCard, infectionCard, heatCard, severeWeatherCard];
@@ -1069,55 +2538,45 @@ function getSeasonalRiskCards(
 function getRiskMessage(temp: number, lang: Language) {
   if (temp <= 35) {
     return {
-      label: lang === "ko" ? "산책 가능해요" : "お散歩できます",
+      label: pickText(lang, "산책 가능해요", "お散歩できます"),
       className: "bg-green-100 text-green-700",
       recommendation:
-        lang === "ko"
-          ? "일반 산책이 가능해요. 그래도 물은 꼭 챙겨주세요."
-          : "通常のお散歩ができそうです。お水は必ず持って行きましょう。",
+        pickText(lang, "일반 산책이 가능해요. 그래도 물은 꼭 챙겨주세요.", "通常のお散歩ができそうです。お水は必ず持って行きましょう。"),
     };
   }
 
   if (temp <= 40) {
     return {
-      label: lang === "ko" ? "짧게 산책 가능해요" : "短めなら大丈夫そう",
+      label: pickText(lang, "짧게 산책 가능해요", "短めなら大丈夫そう"),
       className: "bg-yellow-100 text-yellow-700",
       recommendation:
-        lang === "ko"
-          ? "짧은 산책은 가능하지만, 중간중간 쉬어주세요."
-          : "短めのお散歩なら可能ですが、こまめに休ませてください。",
+        pickText(lang, "짧은 산책은 가능하지만, 중간중간 쉬어주세요.", "短めのお散歩なら可能ですが、こまめに休ませてください。"),
     };
   }
 
   if (temp <= 45) {
     return {
-      label: lang === "ko" ? "조심해야 해요" : "注意が必要です",
+      label: pickText(lang, "조심해야 해요", "注意が必要です"),
       className: "bg-orange-100 text-orange-700",
       recommendation:
-        lang === "ko"
-          ? "손등 7초 테스트를 먼저 해보고, 짧게 산책하세요."
-          : "手の甲7秒テストをしてから、短めにしてください。",
+        pickText(lang, "손등 7초 테스트를 먼저 해보고, 짧게 산책하세요.", "手の甲7秒テストをしてから、短めにしてください。"),
     };
   }
 
   if (temp <= 50) {
     return {
-      label: lang === "ko" ? "지금은 위험해요" : "今は危険です",
+      label: pickText(lang, "지금은 위험해요", "今は危険です"),
       className: "bg-red-100 text-red-600",
       recommendation:
-        lang === "ko"
-          ? "가능하면 산책을 미루고, 배변 산책만 짧게 해주세요."
-          : "できればお散歩は後にして、トイレ散歩だけ短くしてください。",
+        pickText(lang, "가능하면 산책을 미루고, 배변 산책만 짧게 해주세요.", "できればお散歩は後にして、トイレ散歩だけ短くしてください。"),
     };
   }
 
   return {
-    label: lang === "ko" ? "산책하지 마세요" : "お散歩は避けましょう",
+    label: pickText(lang, "산책하지 마세요", "お散歩は避けましょう"),
     className: "bg-zinc-200 text-zinc-800",
     recommendation:
-      lang === "ko"
-        ? "지면 온도가 너무 높아요. 실내 놀이로 대체하세요."
-        : "地面の温度が高すぎます。室内遊びに切り替えましょう。",
+      pickText(lang, "지면 온도가 너무 높아요. 실내 놀이로 대체하세요.", "地面の温度が高すぎます。室内遊びに切り替えましょう。"),
   };
 }
 
@@ -1151,54 +2610,76 @@ function getHeatStressMessage(
   const radiation = weather?.radiation ?? 0;
   const uvIndex = weather?.uvIndex ?? 0;
   const windSpeed = weather?.windSpeed ?? 0;
+  const humidity = weather?.humidity ?? 50;
+  const precipitation = weather?.precipitation ?? 0;
+  const recentPrecipitation = weather?.recentPrecipitation ?? 0;
+  const wetWeather = precipitation > 0 || recentPrecipitation >= 0.5 || isWetWeatherCode(weather?.weatherCode);
 
-  // 습도는 아직 포함하지 않은 간이 더위 스트레스 지표입니다.
+  // 더위 스트레스는 지면온도와 별도로, 열사병·탈수 위험을 보는 간이 지표입니다.
+  // 습도가 높으면 체감 열 스트레스가 올라가고, 비/강한 바람은 일부 낮추지만 악천후 위험은 별도로 표시합니다.
+  const humidityStress = humidity >= 60 ? Math.min((humidity - 60) * 0.09, 4.2) : 0;
+  const rainCooling = wetWeather ? Math.min(precipitation * 1.1 + recentPrecipitation * 0.35, 4) : 0;
+  const windRelief = Math.min(windSpeed * 0.12, 3.2);
   const stressScore =
     airTemperature +
     Math.min(radiation / 120, 7) +
-    Math.min(uvIndex * 0.7, 5) -
-    Math.min(windSpeed * 0.15, 3);
+    Math.min(uvIndex * 0.7, 5) +
+    humidityStress -
+    rainCooling -
+    windRelief;
 
   if (airTemperature >= 32 || groundTemperature >= 46 || stressScore >= 35) {
     return {
-      label: lang === "ko" ? "더위 스트레스 위험" : "暑さストレス危険",
+      label: multiText(lang, "더위 스트레스 위험", "暑さストレス危険", "Heat stress risk", "中暑压力危险"),
       className: "bg-red-100 text-red-700",
-      detail:
-        lang === "ko"
-          ? "열사병·탈수 위험이 커요. 가능하면 산책을 미루고 물과 그늘을 우선해주세요."
-          : "熱中症・脱水リスクが高めです。できれば散歩を避け、水分と日陰を優先してください。",
+      detail: multiText(
+        lang,
+        "열사병·탈수 위험이 커요. 가능하면 산책을 미루고 물과 그늘을 우선해주세요.",
+        "熱中症・脱水リスクが高めです。できれば散歩を避け、水分と日陰を優先してください。",
+        "Heatstroke and dehydration risk is high. Delay the walk if possible and prioritize water and shade.",
+        "中暑和脱水风险较高。尽量推迟遛狗，并优先准备水和阴凉处。"
+      ),
     };
   }
 
   if (airTemperature >= 28 || groundTemperature >= 41 || stressScore >= 30) {
     return {
-      label: lang === "ko" ? "더위 스트레스 주의" : "暑さストレス注意",
+      label: multiText(lang, "더위 스트레스 주의", "暑さストレス注意", "Heat stress caution", "注意中暑压力"),
       className: "bg-amber-100 text-amber-700",
-      detail:
-        lang === "ko"
-          ? "짧게 산책하고, 헐떡임·침흘림·걸음 둔화를 확인해주세요."
-          : "短めにして、パンティング・よだれ・歩き方の変化を確認しましょう。",
+      detail: multiText(
+        lang,
+        "짧게 산책하고, 헐떡임·침흘림·걸음 둔화를 확인해주세요.",
+        "短めにして、パンティング・よだれ・歩き方の変化を確認しましょう。",
+        "Keep it short and watch for panting, drooling, or slower walking.",
+        "建议短时间散步，并观察喘气、流口水或走路变慢。"
+      ),
     };
   }
 
-  if (airTemperature >= 24 || uvIndex >= 3 || radiation >= 450) {
+  if (airTemperature >= 24 || uvIndex >= 3 || radiation >= 450 || humidity >= 75) {
     return {
-      label: lang === "ko" ? "더위 스트레스 확인" : "暑さストレス確認",
+      label: multiText(lang, "더위 스트레스 확인", "暑さストレス確認", "Check heat stress", "确认热压力"),
       className: "bg-yellow-100 text-yellow-700",
-      detail:
-        lang === "ko"
-          ? "대체로 가능하지만 물, 휴식, 그늘을 챙기면 더 안전해요."
-          : "基本的には可能ですが、水分・休憩・日陰があると安心です。",
+      detail: multiText(
+        lang,
+        "대체로 가능하지만 물, 휴식, 그늘을 챙기면 더 안전해요.",
+        "基本的には可能ですが、水分・休憩・日陰があると安心です。",
+        "Usually okay, but water, breaks, and shade make it safer.",
+        "一般可以，但带水、休息并找阴凉处会更安全。"
+      ),
     };
   }
 
   return {
-    label: lang === "ko" ? "더위 스트레스 낮음" : "暑さストレス低め",
+    label: multiText(lang, "더위 스트레스 낮음", "暑さストレス低め", "Low heat stress", "热压力较低"),
     className: "bg-green-100 text-green-700",
-    detail:
-      lang === "ko"
-        ? "열사병 위험은 낮은 편이에요. 그래도 강아지 상태는 계속 봐주세요."
-        : "熱中症リスクは低めです。ワンちゃんの様子は確認してください。",
+    detail: multiText(
+      lang,
+      "열사병 위험은 낮은 편이에요. 그래도 강아지 상태는 계속 봐주세요.",
+      "熱中症リスクは低めです。ワンちゃんの様子は確認してください。",
+      "Heat risk is low, but keep watching your dog’s condition.",
+      "中暑风险较低，但还是要观察狗狗状态。"
+    ),
   };
 }
 
@@ -1229,23 +2710,30 @@ function formatDayAndHour(timeText: string, lang: Language) {
     date.getMonth() === tomorrow.getMonth() &&
     date.getDate() === tomorrow.getDate();
 
-  const time = date.toLocaleTimeString(lang === "ko" ? "ko-KR" : "ja-JP", {
+  const time = date.toLocaleTimeString(pickText(lang, "ko-KR", "ja-JP"), {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   });
 
   if (isSameDay) {
-    return lang === "ko" ? `오늘 ${time}` : `今日 ${time}`;
+    if (lang === "ko") return `오늘 ${time}`;
+    if (lang === "ja") return `今日 ${time}`;
+    if (lang === "en") return `Today ${time}`;
+    return `今天 ${time}`;
   }
 
   if (isTomorrow) {
-    return lang === "ko" ? `내일 ${time}` : `明日 ${time}`;
+    if (lang === "ko") return `내일 ${time}`;
+    if (lang === "ja") return `明日 ${time}`;
+    if (lang === "en") return `Tomorrow ${time}`;
+    return `明天 ${time}`;
   }
 
-  return lang === "ko"
-    ? `${date.getMonth() + 1}월 ${date.getDate()}일 ${time}`
-    : `${date.getMonth() + 1}月${date.getDate()}日 ${time}`;
+  if (lang === "ko") return `${date.getMonth() + 1}월 ${date.getDate()}일 ${time}`;
+  if (lang === "ja") return `${date.getMonth() + 1}月${date.getDate()}日 ${time}`;
+  if (lang === "en") return `${date.getMonth() + 1}/${date.getDate()} ${time}`;
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${time}`;
 }
 
 function findRecommendedWalkTime(
@@ -1275,13 +2763,9 @@ function findRecommendedWalkTime(
   if (!safeHour) {
     return {
       label:
-        lang === "ko"
-          ? "오늘은 늦은 밤 또는 내일 아침 권장"
-          : "今夜遅く、または明日の朝がおすすめ",
+        pickText(lang, "오늘은 늦은 밤 또는 내일 아침 권장", "今夜遅く、または明日の朝がおすすめ"),
       detail:
-        lang === "ko"
-          ? "앞으로 24시간 안에 충분히 안전한 시간이 뚜렷하지 않아요."
-          : "今後24時間以内に十分安全な時間が見つかりませんでした。",
+        pickText(lang, "앞으로 24시간 안에 충분히 안전한 시간이 뚜렷하지 않아요.", "今後24時間以内に十分安全な時間が見つかりませんでした。"),
     };
   }
 
@@ -1296,11 +2780,19 @@ function findRecommendedWalkTime(
     label:
       lang === "ko"
         ? `${formatDayAndHour(safeHour.time, lang)} 이후`
-        : `${formatDayAndHour(safeHour.time, lang)}以降`,
+        : lang === "ja"
+          ? `${formatDayAndHour(safeHour.time, lang)}以降`
+          : lang === "en"
+            ? `After ${formatDayAndHour(safeHour.time, lang)}`
+            : `${formatDayAndHour(safeHour.time, lang)}以后`,
     detail:
       lang === "ko"
         ? `예상 지면온도 약 ${estimatedTemp}℃로 내려갈 가능성이 있어요.`
-        : `予想路面温度が約${estimatedTemp}℃まで下がる可能性があります。`,
+        : lang === "ja"
+          ? `予想路面温度が約${estimatedTemp}℃まで下がる可能性があります。`
+          : lang === "en"
+            ? `Estimated ground temperature may drop to about ${estimatedTemp}℃.`
+            : `预计地面温度可能会降到约 ${estimatedTemp}℃。`,
   };
 }
 
@@ -1314,10 +2806,28 @@ function getShareText(lang: Language) {
 ${APP_URL}`;
   }
 
-  return `夏のお散歩前に、路面温度をチェックしてみてください。
+  if (lang === "ja") {
+    return `夏のお散歩前に、路面温度をチェックしてみてください。
 
 ワン歩チェック / 散歩行けるワン？
 天気・日射量・地面の種類をもとに、予想路面温度とおすすめのお散歩時間を確認できるアプリです。
+
+${APP_URL}`;
+  }
+
+  if (lang === "en") {
+    return `Check the ground before your dog walk.
+
+Wanpo Check / Paw-ssible Walk?
+A small app that estimates ground temperature and suggests walk timing based on weather, sunlight, and surface type.
+
+${APP_URL}`;
+  }
+
+  return `出门遛狗前，先确认地面温度吧。
+
+汪步Check / 现在遛汪可以吗？
+根据天气、日照和地面类型估算地面温度，并推荐适合遛狗的时间。
 
 ${APP_URL}`;
 }
@@ -1325,13 +2835,13 @@ ${APP_URL}`;
 
 function calculateDogAge(birthday: string | undefined, lang: Language) {
   if (!birthday) {
-    return lang === "ko" ? "미입력" : "未入力";
+    return pickText(lang, "미입력", "未入力");
   }
 
   const birthDate = new Date(birthday);
 
   if (Number.isNaN(birthDate.getTime())) {
-    return lang === "ko" ? "미입력" : "未入力";
+    return pickText(lang, "미입력", "未入力");
   }
 
   const today = new Date();
@@ -1349,34 +2859,43 @@ function calculateDogAge(birthday: string | undefined, lang: Language) {
   }
 
   if (years <= 0 && months <= 0) {
-    return lang === "ko" ? "1개월 미만" : "1か月未満";
+    return pickText(lang, "1개월 미만", "1か月未満");
   }
 
   if (years <= 0) {
-    return lang === "ko" ? `${months}개월` : `${months}か月`;
+    if (lang === "ko") return `${months}개월`;
+    if (lang === "ja") return `${months}か月`;
+    if (lang === "en") return `${months} mo`;
+    return `${months}个月`;
   }
 
   if (months <= 0) {
-    return lang === "ko" ? `${years}살` : `${years}歳`;
+    if (lang === "ko") return `${years}살`;
+    if (lang === "ja") return `${years}歳`;
+    if (lang === "en") return `${years} yr`;
+    return `${years}岁`;
   }
 
-  return lang === "ko" ? `${years}살 ${months}개월` : `${years}歳 ${months}か月`;
+  if (lang === "ko") return `${years}살 ${months}개월`;
+  if (lang === "ja") return `${years}歳 ${months}か月`;
+  if (lang === "en") return `${years} yr ${months} mo`;
+  return `${years}岁 ${months}个月`;
 }
 
 function getSexLabel(sex: DogSex | undefined, lang: Language) {
-  if (sex === "male") return lang === "ko" ? "남아" : "男の子";
-  if (sex === "female") return lang === "ko" ? "여아" : "女の子";
-  return lang === "ko" ? "미입력" : "未入力";
+  if (sex === "male") return pickText(lang, "남아", "男の子");
+  if (sex === "female") return pickText(lang, "여아", "女の子");
+  return pickText(lang, "미입력", "未入力");
 }
 
 function getNeuteredLabel(status: NeuteredStatus | undefined, lang: Language) {
-  if (status === "yes") return lang === "ko" ? "완료" : "済み";
-  if (status === "no") return lang === "ko" ? "미완료" : "未実施";
-  return lang === "ko" ? "미입력" : "未入力";
+  if (status === "yes") return pickText(lang, "완료", "済み");
+  if (status === "no") return pickText(lang, "미완료", "未実施");
+  return pickText(lang, "미입력", "未入力");
 }
 
 function getEmptyText(lang: Language) {
-  return lang === "ko" ? "미입력" : "未入力";
+  return pickText(lang, "미입력", "未入力");
 }
 
 function createDogId() {
@@ -1424,7 +2943,7 @@ function formatSavedDate(dateText: string | undefined, lang: Language) {
     return getEmptyText(lang);
   }
 
-  return date.toLocaleDateString(lang === "ko" ? "ko-KR" : "ja-JP", {
+  return date.toLocaleDateString(pickText(lang, "ko-KR", "ja-JP"), {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -1458,20 +2977,20 @@ function getScheduleStatus(dateText: string | undefined, lang: Language) {
 
   if (diffDays < 0) {
     return {
-      label: lang === "ko" ? "기한 지남" : "期限切れ",
+      label: pickText(lang, "기한 지남", "期限切れ"),
       className: "bg-red-100 text-red-600",
     };
   }
 
   if (diffDays <= 7) {
     return {
-      label: lang === "ko" ? "곧 예정" : "まもなく",
+      label: pickText(lang, "곧 예정", "まもなく"),
       className: "bg-orange-100 text-orange-700",
     };
   }
 
   return {
-    label: lang === "ko" ? "예정" : "予定",
+    label: pickText(lang, "예정", "予定"),
     className: "bg-green-100 text-green-700",
   };
 }
@@ -1574,6 +3093,13 @@ export default function Home() {
   const [favoriteVetHoursInput, setFavoriteVetHoursInput] = useState("");
   const [favoriteVetMemoInput, setFavoriteVetMemoInput] = useState("");
 
+  const [walkRecords, setWalkRecords] = useState<Record<string, DailyWalkRecord>>({});
+  const [sensitivitySettings, setSensitivitySettings] = useState<Record<string, DogSensitivity>>({});
+  const [favoritePlaces, setFavoritePlaces] = useState<FavoritePlace[]>([]);
+  const [favoritePlaceNameInput, setFavoritePlaceNameInput] = useState("");
+  const [favoritePlaceQueryInput, setFavoritePlaceQueryInput] = useState("");
+  const [favoritePlaceMemoInput, setFavoritePlaceMemoInput] = useState("");
+
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timer, setTimer] = useState(7);
   const [timerFinished, setTimerFinished] = useState(false);
@@ -1583,6 +3109,15 @@ export default function Home() {
 
   const t = getText(lang);
   const isJapanese = lang === "ja";
+  const appLocale = lang === "ko" ? "ko-KR" : lang === "ja" ? "ja-JP" : lang === "zh" ? "zh-CN" : "en";
+  const appFontFamily =
+    lang === "zh"
+      ? '"Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Source Han Sans SC", "Arial", sans-serif'
+      : lang === "ja"
+        ? '"Yu Gothic", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif'
+        : lang === "ko"
+          ? '"Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif'
+          : '"Inter", "Segoe UI", "Arial", sans-serif';
 
   useEffect(() => {
     const savedProfiles = localStorage.getItem("wanpo-dog-profiles");
@@ -1635,7 +3170,7 @@ export default function Home() {
       localStorage.setItem("wanpo-active-dog-id", activeProfile.id);
     }
 
-    if (savedLang === "ko" || savedLang === "ja") {
+    if (savedLang === "ko" || savedLang === "ja" || savedLang === "en" || savedLang === "zh") {
       setLang(savedLang);
     }
 
@@ -1655,6 +3190,36 @@ export default function Home() {
         localStorage.removeItem("wanpo-favorite-vet");
       }
     }
+
+    const savedWalkRecords = localStorage.getItem("wanpo-walk-records");
+    if (savedWalkRecords) {
+      try {
+        setWalkRecords(JSON.parse(savedWalkRecords));
+      } catch {
+        localStorage.removeItem("wanpo-walk-records");
+      }
+    }
+
+    const savedSensitivitySettings = localStorage.getItem("wanpo-sensitivity-settings");
+    if (savedSensitivitySettings) {
+      try {
+        setSensitivitySettings(JSON.parse(savedSensitivitySettings));
+      } catch {
+        localStorage.removeItem("wanpo-sensitivity-settings");
+      }
+    }
+
+    const savedFavoritePlaces = localStorage.getItem("wanpo-favorite-places");
+    if (savedFavoritePlaces) {
+      try {
+        const parsedFavoritePlaces = JSON.parse(savedFavoritePlaces);
+        if (Array.isArray(parsedFavoritePlaces)) {
+          setFavoritePlaces(parsedFavoritePlaces.slice(0, 8));
+        }
+      } catch {
+        localStorage.removeItem("wanpo-favorite-places");
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -1669,31 +3234,23 @@ export default function Home() {
     latitude !== null && longitude !== null
       ? lang === "ko"
         ? `위도 ${latitude.toFixed(2)}, 경도 ${longitude.toFixed(2)}`
-        : `緯度 ${latitude.toFixed(2)}, 経度 ${longitude.toFixed(2)}`
-      : lang === "ko"
-        ? "위치 확인 중..."
-        : "位置を確認中...";
+        : lang === "ja"
+          ? `緯度 ${latitude.toFixed(2)}, 経度 ${longitude.toFixed(2)}`
+          : lang === "en"
+            ? `Lat ${latitude.toFixed(2)}, Lon ${longitude.toFixed(2)}`
+            : `纬度 ${latitude.toFixed(2)}, 经度 ${longitude.toFixed(2)}`
+      : pickText(lang, "위치 확인 중...", "位置を確認中...");
 
   const weatherStatusText =
     weatherStatusType === "success"
-      ? lang === "ko"
-        ? "실제 날씨와 시간별 예보 반영 중"
-        : "現在の天気と時間別予報を反映中"
+      ? pickText(lang, "실제 날씨와 시간별 예보 반영 중", "現在の天気と時間別予報を反映中")
       : weatherStatusType === "fallback"
-        ? lang === "ko"
-          ? "날씨 정보를 가져오지 못해 기본값 26℃를 사용 중"
-          : "天気情報を取得できないため、初期値26℃を使用中"
+        ? pickText(lang, "날씨 정보를 가져오지 못해 기본값 26℃를 사용 중", "天気情報を取得できないため、初期値26℃を使用中")
         : weatherStatusType === "unsupported"
-          ? lang === "ko"
-            ? "이 브라우저는 위치 정보를 지원하지 않아요."
-            : "このブラウザは位置情報に対応していません。"
+          ? pickText(lang, "이 브라우저는 위치 정보를 지원하지 않아요.", "このブラウザは位置情報に対応していません。")
           : weatherStatusType === "denied"
-            ? lang === "ko"
-              ? "위치 권한이 없어 기본값 26℃를 사용 중"
-              : "位置情報の許可がないため、初期値26℃を使用中"
-            : lang === "ko"
-              ? "날씨 정보를 불러오는 중..."
-              : "天気情報を取得中...";
+            ? pickText(lang, "위치 권한이 없어 기본값 26℃를 사용 중", "位置情報の許可がないため、初期値26℃を使用中")
+            : pickText(lang, "날씨 정보를 불러오는 중...", "天気情報を取得中...");
 
   const airTemperature = weather?.temperature ?? 26;
 
@@ -1708,17 +3265,39 @@ export default function Home() {
   const currentSun = sunData[selectedSun];
   const risk = getRiskMessage(groundTemperature, lang);
   const heatStress = getHeatStressMessage(weather, airTemperature, groundTemperature, lang);
+  const weatherCaution = getWeatherCautionMessage(weather, lang);
   const groundTemperatureDisplayClass = getGroundTemperatureDisplayClass(groundTemperature);
 
-  const recommendedWalkTime =
-    hourlyWeather.length > 0
-      ? findRecommendedWalkTime(hourlyWeather, selectedSurface, selectedSun, lang)
+  const isCurrentGroundSafe = groundTemperature <= 33;
+  const isHeatStressAcceptable =
+    !heatStress.className.includes("red") &&
+    !heatStress.className.includes("amber");
+  const isWeatherCautionClear = weatherCaution === null;
+  const canWalkAnytimeNow =
+    isCurrentGroundSafe && isHeatStressAcceptable && isWeatherCautionClear;
+
+  const recommendedWalkTime = canWalkAnytimeNow
+    ? {
+        label: multiText(lang, "언제든 가능해요", "今でも大丈夫", "Anytime looks okay", "现在也可以"),
+        detail: multiText(
+          lang,
+          "지면온도와 더위 스트레스가 안전 범위예요. 강아지 컨디션을 보면서 산책해도 좋아요.",
+          "路面温度と暑さストレスは安全圏です。ワンちゃんの様子を見ながらお散歩できます。",
+          "Ground temperature and heat stress look safe. You can walk while watching your dog’s condition.",
+          "地面温度和热压力都在安全范围内。注意狗狗状态就可以出门。"
+        ),
+        showHourlyPreview: false,
+      }
+    : hourlyWeather.length > 0
+      ? {
+          ...findRecommendedWalkTime(hourlyWeather, selectedSurface, selectedSun, lang),
+          showHourlyPreview: true,
+        }
       : {
-          label: lang === "ko" ? "계산 중..." : "計算中...",
+          label: pickText(lang, "계산 중...", "計算中..."),
           detail:
-            lang === "ko"
-              ? "시간별 예보를 불러오고 있어요."
-              : "時間ごとの予報を取得しています。",
+            pickText(lang, "시간별 예보를 불러오고 있어요.", "時間ごとの予報を取得しています。"),
+          showHourlyPreview: false,
         };
 
   const previewHours = hourlyWeather
@@ -1744,6 +3323,39 @@ export default function Home() {
   const seasonalRiskCards = getSeasonalRiskCards(lang, weather, groundTemperature);
   const currentSeasonName = getCurrentSeasonName(new Date().getMonth() + 1, lang);
 
+  const todayKey = getTodayKey();
+  const currentWalkRecordKey = dogProfile ? `${dogProfile.id}-${todayKey}` : todayKey;
+  const currentWalkRecord = walkRecords[currentWalkRecordKey] ?? getDefaultWalkRecord();
+  const currentSensitivity = dogProfile
+    ? sensitivitySettings[dogProfile.id] ?? getDefaultSensitivity()
+    : getDefaultSensitivity();
+  const healthAlertItems = dogProfile ? getHealthAlertItems(dogProfile, lang) : [];
+  const urgentHealthAlertCount = healthAlertItems.filter((item) =>
+    item.className.includes("red") || item.className.includes("amber")
+  ).length;
+  const oneLineRecommendation = getOneLineRecommendation(
+    lang,
+    groundTemperature,
+    heatStress,
+    weatherCaution,
+    currentSensitivity
+  );
+  const timeSlotCards = previewHours.slice(0, 6).map((item) => {
+    const hourly = hourlyWeather.find((hour) => formatHour(hour.time) === item.time);
+    const level = hourly
+      ? getTimeSlotLevel(item.groundTemp, hourly, lang)
+      : {
+          mark: "○",
+          label: multiText(lang, "가능", "可能", "Okay", "可以"),
+          className: "bg-slate-50 text-slate-600",
+        };
+
+    return {
+      ...item,
+      ...level,
+    };
+  });
+
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
     APP_URL
   )}`;
@@ -1760,9 +3372,9 @@ export default function Home() {
 
 
   const dogCafeSearchQuery =
-    lang === "ko" ? "강아지 동반 카페" : "犬同伴 カフェ 近く";
+    pickText(lang, "강아지 동반 카페", "犬同伴 カフェ 近く");
   const dogRestaurantSearchQuery =
-    lang === "ko" ? "강아지 동반 식당" : "犬同伴 レストラン 近く";
+    pickText(lang, "강아지 동반 식당", "犬同伴 レストラン 近く");
 
   const dogCafeSearchUrl =
     latitude !== null && longitude !== null
@@ -1788,7 +3400,7 @@ export default function Home() {
       currentLongitude: number
     ) {
       try {
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${currentLatitude}&longitude=${currentLongitude}&current=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&hourly=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&past_days=1&forecast_days=2&timezone=auto`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${currentLatitude}&longitude=${currentLongitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,cloud_cover,shortwave_radiation,precipitation,weather_code&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,cloud_cover,shortwave_radiation,precipitation,weather_code&past_days=1&forecast_days=2&timezone=auto`;
 
         const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${currentLatitude}&longitude=${currentLongitude}&hourly=pm10,pm2_5,european_aqi,uv_index&forecast_days=2&timezone=auto`;
 
@@ -1819,9 +3431,14 @@ export default function Home() {
 
         const hourlyTimes: string[] = data.hourly.time;
         const hourlyRadiations: Array<number | null> = data.hourly.shortwave_radiation;
+        const hourlyPrecipitations: Array<number | null> = data.hourly.precipitation;
         const currentWeatherIndex = findNearestTimeIndex(hourlyTimes, data.current.time);
         const currentRecentSunFactor = calculateRecentSunFactor(
           hourlyRadiations,
+          currentWeatherIndex
+        );
+        const currentRecentPrecipitation = calculateRecentPrecipitation(
+          hourlyPrecipitations,
           currentWeatherIndex
         );
 
@@ -1830,6 +3447,10 @@ export default function Home() {
           windSpeed: Math.round(data.current.wind_speed_10m),
           cloudCover: Math.round(data.current.cloud_cover),
           radiation: Math.round(data.current.shortwave_radiation),
+          humidity: Math.round(data.current.relative_humidity_2m),
+          precipitation: Math.round((data.current.precipitation ?? 0) * 10) / 10,
+          recentPrecipitation: currentRecentPrecipitation,
+          weatherCode: data.current.weather_code,
           recentSunFactor: currentRecentSunFactor,
           uvIndex: currentAirQuality.uvIndex,
           airQualityIndex: currentAirQuality.airQualityIndex,
@@ -1847,6 +3468,10 @@ export default function Home() {
               windSpeed: Math.round(data.hourly.wind_speed_10m[index]),
               cloudCover: Math.round(data.hourly.cloud_cover[index]),
               radiation: Math.round(data.hourly.shortwave_radiation[index]),
+              humidity: Math.round(data.hourly.relative_humidity_2m[index]),
+              precipitation: Math.round((data.hourly.precipitation[index] ?? 0) * 10) / 10,
+              recentPrecipitation: calculateRecentPrecipitation(hourlyPrecipitations, index),
+              weatherCode: data.hourly.weather_code[index],
               recentSunFactor: calculateRecentSunFactor(hourlyRadiations, index),
               uvIndex: hourlyAirQuality.uvIndex,
               airQualityIndex: hourlyAirQuality.airQualityIndex,
@@ -2007,10 +3632,66 @@ export default function Home() {
 
   function toggleLanguage() {
     setLang((currentLang) => {
-      const nextLang = currentLang === "ko" ? "ja" : "ko";
+      const currentIndex = languageOrder.indexOf(currentLang);
+      const nextLang = languageOrder[(currentIndex + 1) % languageOrder.length];
       localStorage.setItem("wanpo-language", nextLang);
       return nextLang;
     });
+  }
+
+  function updateWalkRecord(patch: Partial<DailyWalkRecord>) {
+    const nextRecord: DailyWalkRecord = {
+      ...currentWalkRecord,
+      ...patch,
+      savedAt: new Date().toISOString(),
+    };
+    const nextRecords = {
+      ...walkRecords,
+      [currentWalkRecordKey]: nextRecord,
+    };
+    setWalkRecords(nextRecords);
+    localStorage.setItem("wanpo-walk-records", JSON.stringify(nextRecords));
+  }
+
+  function toggleSensitivity(key: keyof DogSensitivity) {
+    if (!dogProfile) return;
+
+    const nextSensitivity = {
+      ...currentSensitivity,
+      [key]: !currentSensitivity[key],
+    };
+    const nextSettings = {
+      ...sensitivitySettings,
+      [dogProfile.id]: nextSensitivity,
+    };
+    setSensitivitySettings(nextSettings);
+    localStorage.setItem("wanpo-sensitivity-settings", JSON.stringify(nextSettings));
+  }
+
+  function addFavoritePlace() {
+    const name = favoritePlaceNameInput.trim();
+    const query = favoritePlaceQueryInput.trim();
+
+    if (!name && !query) return;
+
+    const nextPlace: FavoritePlace = {
+      id: `place-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: name || query,
+      query: query || name,
+      memo: favoritePlaceMemoInput.trim(),
+    };
+    const nextPlaces = [nextPlace, ...favoritePlaces].slice(0, 8);
+    setFavoritePlaces(nextPlaces);
+    localStorage.setItem("wanpo-favorite-places", JSON.stringify(nextPlaces));
+    setFavoritePlaceNameInput("");
+    setFavoritePlaceQueryInput("");
+    setFavoritePlaceMemoInput("");
+  }
+
+  function removeFavoritePlace(placeId: string) {
+    const nextPlaces = favoritePlaces.filter((place) => place.id !== placeId);
+    setFavoritePlaces(nextPlaces);
+    localStorage.setItem("wanpo-favorite-places", JSON.stringify(nextPlaces));
   }
 
   function persistDogProfiles(
@@ -2064,9 +3745,7 @@ export default function Home() {
 
     if (dogProfiles.length >= 5 && isAddingDog) {
       alert(
-        lang === "ko"
-          ? "강아지는 최대 5마리까지 저장할 수 있어요."
-          : "ワンちゃんは最大5匹まで保存できます。"
+        pickText(lang, "강아지는 최대 5마리까지 저장할 수 있어요.", "ワンちゃんは最大5匹まで保存できます。")
       );
       return;
     }
@@ -2097,9 +3776,7 @@ export default function Home() {
   function startAddDog() {
     if (dogProfiles.length >= 5) {
       alert(
-        lang === "ko"
-          ? "강아지는 최대 5마리까지 저장할 수 있어요."
-          : "ワンちゃんは最大5匹まで保存できます。"
+        pickText(lang, "강아지는 최대 5마리까지 저장할 수 있어요.", "ワンちゃんは最大5匹まで保存できます。")
       );
       return;
     }
@@ -2251,7 +3928,7 @@ export default function Home() {
       setCopyStatus(t.copied);
       setTimeout(() => setCopyStatus(""), 2000);
     } catch {
-      setCopyStatus(lang === "ko" ? "복사에 실패했어요" : "コピーに失敗しました");
+      setCopyStatus(pickText(lang, "복사에 실패했어요", "コピーに失敗しました"));
       setTimeout(() => setCopyStatus(""), 2000);
     }
   }
@@ -2299,9 +3976,7 @@ export default function Home() {
 
   function clearFavoriteVet() {
     const shouldClear = window.confirm(
-      lang === "ko"
-        ? "자주 가는 병원 정보를 삭제할까요?"
-        : "かかりつけ病院の情報を削除しますか？"
+      pickText(lang, "자주 가는 병원 정보를 삭제할까요?", "かかりつけ病院の情報を削除しますか？")
     );
 
     if (!shouldClear) return;
@@ -2335,6 +4010,8 @@ export default function Home() {
   if (!dogProfile || isAddingDog) {
     return (
       <main
+        lang={appLocale}
+        style={{ fontFamily: appFontFamily }}
         className={`min-h-screen bg-gradient-to-b ${activeBreed.bg} p-6 text-slate-900`}
       >
         <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center">
@@ -2342,32 +4019,34 @@ export default function Home() {
             <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/40 opacity-40" />
 
             <div className="relative z-20 mb-6 flex justify-end">
-              <button
-                type="button"
-                onClick={toggleLanguage}
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white"
+              <select
+                value={lang}
+                onChange={(event) => {
+                  const nextLang = event.target.value as Language;
+                  setLang(nextLang);
+                  localStorage.setItem("wanpo-language", nextLang);
+                }}
+                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white outline-none"
+                aria-label="Language"
               >
-                {t.languageButton}
-              </button>
+                <option value="ko">한국어</option>
+                <option value="ja">日本語</option>
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+              </select>
             </div>
 
             <div className="relative z-10 text-center">
               <p className="text-sm font-semibold text-blue-500">{t.appName}</p>
               <h1 className="mt-2 text-4xl font-black">
                 {isAddingDog
-                  ? lang === "ko"
-                    ? "강아지 추가하기"
-                    : "ワンちゃんを追加"
+                  ? pickText(lang, "강아지 추가하기", "ワンちゃんを追加")
                   : t.setupTitle}
               </h1>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 {isAddingDog
-                  ? lang === "ko"
-                    ? "이름과 견종만 먼저 저장하고, 자세한 건강 정보는 앱 안에서 추가할 수 있어요."
-                    : "名前と犬種だけ先に保存して、詳しい健康情報はアプリ内で追加できます。"
-                  : lang === "ko"
-                    ? "이름과 견종만 먼저 등록해도 바로 시작할 수 있어요."
-                    : "名前と犬種だけ登録すれば、すぐに始められます。"}
+                  ? pickText(lang, "이름과 견종만 먼저 저장하고, 자세한 건강 정보는 앱 안에서 추가할 수 있어요.", "名前と犬種だけ先に保存して、詳しい健康情報はアプリ内で追加できます。")
+                  : pickText(lang, "이름과 견종만 먼저 등록해도 바로 시작할 수 있어요.", "名前と犬種だけ登録すれば、すぐに始められます。")}
               </p>
             </div>
 
@@ -2408,13 +4087,13 @@ export default function Home() {
                       >
                         <img
                           src={breed.image}
-                          alt={lang === "ko" ? breed.labelKo : breed.labelJa}
+                          alt={getLabel(breed, lang, key)}
                           className="h-full w-full object-contain p-1"
                         />
                       </div>
 
                       <span className="text-center leading-5">
-                        {lang === "ko" ? breed.labelKo : breed.labelJa}
+                        {getLabel(breed, lang, key)}
                       </span>
                     </button>
                   );
@@ -2425,12 +4104,10 @@ export default function Home() {
 
             <div className="relative z-10 mt-5 rounded-3xl bg-blue-50 p-4 text-sm leading-6 text-slate-600">
               <p className="font-black text-slate-700">
-                {lang === "ko" ? "나머지 정보는 나중에 입력" : "詳しい情報はあとで入力"}
+                {pickText(lang, "나머지 정보는 나중에 입력", "詳しい情報はあとで入力")}
               </p>
               <p className="mt-1">
-                {lang === "ko"
-                  ? "생일, 체중, 예방접종, 심장사상충약, 벼룩·진드기약 기록은 앱 안의 ‘건강 정보 관리’에서 추가할 수 있어요."
-                  : "誕生日、体重、ワクチン、フィラリア薬、ノミ・ダニ薬の記録はアプリ内の「健康情報管理」から追加できます。"}
+                {pickText(lang, "생일, 체중, 예방접종, 심장사상충약, 벼룩·진드기약 기록은 앱 안의 ‘건강 정보 관리’에서 추가할 수 있어요.", "誕生日、体重、ワクチン、フィラリア薬、ノミ・ダニ薬の記録はアプリ内の「健康情報管理」から追加できます。")}
               </p>
             </div>
             <button
@@ -2439,9 +4116,7 @@ export default function Home() {
               className="relative z-20 mt-7 w-full rounded-2xl bg-blue-500 px-4 py-4 text-lg font-black text-white shadow-lg"
             >
               {isAddingDog
-                ? lang === "ko"
-                  ? "추가하기"
-                  : "追加する"
+                ? pickText(lang, "추가하기", "追加する")
                 : t.start}
             </button>
 
@@ -2451,7 +4126,7 @@ export default function Home() {
                 onClick={cancelAddDog}
                 className="relative z-20 mt-3 w-full rounded-2xl bg-slate-100 px-4 py-4 text-base font-black text-slate-700 shadow"
               >
-                {lang === "ko" ? "돌아가기" : "戻る"}
+                {pickText(lang, "돌아가기", "戻る")}
               </button>
             )}
           </section>
@@ -2462,6 +4137,8 @@ export default function Home() {
 
   return (
     <main
+      lang={appLocale}
+      style={{ fontFamily: appFontFamily }}
       className={`h-[100svh] max-h-[100svh] overflow-hidden bg-gradient-to-b ${activeBreed.bg} p-3 text-slate-900`}
     >
       <div className="mx-auto flex h-full max-h-full max-w-md flex-col overflow-hidden">
@@ -2473,7 +4150,7 @@ export default function Home() {
             const diffX = touchStartX - event.changedTouches[0].clientX;
             if (Math.abs(diffX) > 55) {
               setActivePage((currentPage) => {
-                if (diffX > 0) return Math.min(currentPage + 1, 5);
+                if (diffX > 0) return Math.min(currentPage + 1, 6);
                 return Math.max(currentPage - 1, 0);
               });
             }
@@ -2488,13 +4165,21 @@ export default function Home() {
               <h1 className="truncate text-2xl font-black leading-7">{t.title}</h1>
             </div>
 
-            <button
-              type="button"
-              onClick={toggleLanguage}
-              className="shrink-0 rounded-full bg-slate-900 px-3 py-2 text-xs font-bold text-white"
+            <select
+              value={lang}
+              onChange={(event) => {
+                const nextLang = event.target.value as Language;
+                setLang(nextLang);
+                localStorage.setItem("wanpo-language", nextLang);
+              }}
+              className="shrink-0 rounded-full bg-slate-900 px-3 py-2 text-xs font-bold text-white outline-none"
+              aria-label="Language"
             >
-              {t.languageButton}
-            </button>
+              <option value="ko">한국어</option>
+              <option value="ja">日本語</option>
+              <option value="en">English</option>
+              <option value="zh">中文</option>
+            </select>
           </div>
 
           <div className="relative z-10 h-[calc(100%-3.5rem)] overflow-hidden">
@@ -2506,9 +4191,7 @@ export default function Home() {
                       <img
                         src={breedData[dogProfile.breed].image}
                         alt={
-                          lang === "ko"
-                            ? breedData[dogProfile.breed].labelKo
-                            : breedData[dogProfile.breed].labelJa
+                          getLabel(breedData[dogProfile.breed], lang, dogProfile.breed)
                         }
                         className="h-full w-full object-cover"
                       />
@@ -2516,9 +4199,7 @@ export default function Home() {
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs leading-4 text-slate-500">
-                        {lang === "ko"
-                          ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
-                          : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
+                        {`${getLabel(breedData[dogProfile.breed], lang, dogProfile.breed)} · ${t.todayCheck}`}
                       </p>
                       <p className="mt-1 truncate text-base font-black leading-6">
                         {dogProfile.name}
@@ -2526,6 +4207,15 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
+                </div>
+
+                <div className="shrink-0 rounded-3xl bg-emerald-50 p-3 shadow-inner">
+                  <p className="text-xs font-black text-emerald-700">
+                    {multiText(lang, "오늘의 한 줄 추천", "今日のひとこと", "Today’s quick tip", "今日一句建议")}
+                  </p>
+                  <p className="mt-1 text-xs font-bold leading-5 text-slate-700">
+                    {oneLineRecommendation}
+                  </p>
                 </div>
 
                 <div className="shrink-0 rounded-2xl bg-white p-3 shadow">
@@ -2570,6 +4260,18 @@ export default function Home() {
                         <p>{weather.radiation} W/m²</p>
                       </div>
                       <div className="rounded-xl bg-white px-1 py-1.5">
+                        <p className="font-bold">{multiText(lang, "습도", "湿度", "Humidity", "湿度")}</p>
+                        <p>{weather.humidity !== undefined ? `${weather.humidity}%` : "-"}</p>
+                      </div>
+                      <div className="rounded-xl bg-white px-1 py-1.5">
+                        <p className="font-bold">{multiText(lang, "강수", "降水", "Rain", "降水")}</p>
+                        <p>{weather.precipitation !== undefined ? `${weather.precipitation}mm` : "-"}</p>
+                      </div>
+                      <div className="rounded-xl bg-white px-1 py-1.5">
+                        <p className="font-bold">{multiText(lang, "날씨", "天気", "Weather", "天气")}</p>
+                        <p className="truncate">{getWeatherConditionLabel(weather.weatherCode, lang)}</p>
+                      </div>
+                      <div className="rounded-xl bg-white px-1 py-1.5">
                         <p className="font-bold">{t.uvIndex}</p>
                         <p className="truncate">
                           {weather.uvIndex !== undefined
@@ -2597,7 +4299,7 @@ export default function Home() {
                   )}
 
                   <p className="mt-2 truncate text-xs text-slate-500">
-                    {lang === "ko" ? currentSurface.labelKo : currentSurface.labelJa} · {lang === "ko" ? currentSun.labelKo : currentSun.labelJa}
+                    {getLabel(currentSurface, lang)} · {getLabel(currentSun, lang)}
                   </p>
                   <p className={`mt-3 rounded-full px-4 py-3 text-center text-base font-black shadow-sm ${risk.className}`}>
                     {risk.label}
@@ -2607,6 +4309,13 @@ export default function Home() {
                     <p className="font-black">{heatStress.label}</p>
                     <p className="mt-0.5 font-semibold">{heatStress.detail}</p>
                   </div>
+
+                  {weatherCaution && (
+                    <div className={`mt-2 rounded-2xl px-3 py-2 text-xs leading-4 ${weatherCaution.className}`}>
+                      <p className="font-black">{weatherCaution.label}</p>
+                      <p className="mt-0.5 font-semibold">{weatherCaution.detail}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid shrink-0 grid-cols-2 gap-2">
@@ -2627,7 +4336,7 @@ export default function Home() {
                                 : "bg-white text-slate-700"
                             }`}
                           >
-                            {lang === "ko" ? surface.labelKo : surface.labelJa}
+                            {getLabel(surface, lang)}
                           </button>
                         );
                       })}
@@ -2651,7 +4360,7 @@ export default function Home() {
                                 : "bg-white text-slate-700"
                             }`}
                           >
-                            {lang === "ko" ? sun.labelKo : sun.labelJa}
+                            {getLabel(sun, lang)}
                           </button>
                         );
                       })}
@@ -2666,12 +4375,12 @@ export default function Home() {
                     {recommendedWalkTime.detail}
                   </p>
 
-                  {previewHours.length > 0 && (
+                  {recommendedWalkTime.showHourlyPreview && timeSlotCards.length > 0 && (
                     <div className="mt-1.5 grid grid-cols-3 gap-1.5 text-center text-[10px] leading-3">
-                      {previewHours.slice(0, 6).map((item) => (
-                        <div key={item.time} className="rounded-xl bg-white px-1.5 py-1">
-                          <p className="font-bold text-slate-700">{item.time}</p>
-                          <p className="text-slate-500">{item.groundTemp}℃</p>
+                      {timeSlotCards.map((item) => (
+                        <div key={item.time} className={`rounded-xl px-1.5 py-1 ${item.className}`}>
+                          <p className="font-black">{item.mark} {item.time}</p>
+                          <p>{item.groundTemp}℃ · {item.label}</p>
                         </div>
                       ))}
                     </div>
@@ -2687,7 +4396,7 @@ export default function Home() {
                     <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <p className="text-sm font-black text-slate-700">
-                          {lang === "ko" ? "등록된 강아지" : "登録済みのワンちゃん"}
+                          {pickText(lang, "등록된 강아지", "登録済みのワンちゃん")}
                         </p>
                         <p className="text-xs font-bold text-slate-400">{dogProfiles.length}/5</p>
                       </div>
@@ -2723,7 +4432,7 @@ export default function Home() {
                             onClick={startAddDog}
                             className="shrink-0 rounded-2xl bg-blue-500 px-4 py-2 text-xs font-black text-white shadow"
                           >
-                            {lang === "ko" ? "+ 추가" : "+ 追加"}
+                            {pickText(lang, "+ 추가", "+ 追加")}
                           </button>
                         )}
                       </div>
@@ -2733,12 +4442,10 @@ export default function Home() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-black text-slate-700">
-                            {lang === "ko" ? "건강 정보 관리" : "健康情報管理"}
+                            {pickText(lang, "건강 정보 관리", "健康情報管理")}
                           </p>
                           <p className="mt-1 truncate text-xs text-slate-500">
-                            {lang === "ko"
-                              ? "기본 정보와 투약·접종 기록"
-                              : "基本情報と投薬・ワクチン記録"}
+                            {pickText(lang, "기본 정보와 투약·접종 기록", "基本情報と投薬・ワクチン記録")}
                           </p>
                         </div>
 
@@ -2747,7 +4454,7 @@ export default function Home() {
                           onClick={openHealthEditor}
                           className="shrink-0 rounded-full bg-blue-500 px-4 py-2 text-xs font-black text-white"
                         >
-                          {lang === "ko" ? "수정" : "編集"}
+                          {pickText(lang, "수정", "編集")}
                         </button>
                       </div>
 
@@ -2761,9 +4468,7 @@ export default function Home() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-xs leading-4 text-slate-500">
-                            {lang === "ko"
-                              ? `${breedData[dogProfile.breed].labelKo} · ${t.todayCheck}`
-                              : `${breedData[dogProfile.breed].labelJa} · ${t.todayCheck}`}
+                            {`${getLabel(breedData[dogProfile.breed], lang, dogProfile.breed)} · ${t.todayCheck}`}
                           </p>
                           <p className="mt-1 truncate text-base font-black leading-6">
                             {dogProfile.name}
@@ -2774,45 +4479,45 @@ export default function Home() {
 
                       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                         <div className="rounded-2xl bg-slate-50 p-3">
-                          <p className="font-bold text-slate-400">{lang === "ko" ? "나이" : "年齢"}</p>
+                          <p className="font-bold text-slate-400">{pickText(lang, "나이", "年齢")}</p>
                           <p className="mt-1 font-black text-slate-700">{calculateDogAge(dogProfile.birthday, lang)}</p>
                         </div>
                         <div className="rounded-2xl bg-slate-50 p-3">
-                          <p className="font-bold text-slate-400">{lang === "ko" ? "체중" : "体重"}</p>
+                          <p className="font-bold text-slate-400">{pickText(lang, "체중", "体重")}</p>
                           <p className="mt-1 font-black text-slate-700">
                             {dogProfile.weight ? `${dogProfile.weight} kg` : getEmptyText(lang)}
                           </p>
                         </div>
                         <div className="rounded-2xl bg-slate-50 p-3">
-                          <p className="font-bold text-slate-400">{lang === "ko" ? "성별" : "性別"}</p>
+                          <p className="font-bold text-slate-400">{pickText(lang, "성별", "性別")}</p>
                           <p className="mt-1 font-black text-slate-700">{getSexLabel(dogProfile.sex, lang)}</p>
                         </div>
                         <div className="rounded-2xl bg-slate-50 p-3">
-                          <p className="font-bold text-slate-400">{lang === "ko" ? "중성화" : "避妊・去勢"}</p>
+                          <p className="font-bold text-slate-400">{pickText(lang, "중성화", "避妊・去勢")}</p>
                           <p className="mt-1 font-black text-slate-700">{getNeuteredLabel(dogProfile.neutered, lang)}</p>
                         </div>
                       </div>
 
                       <div className="mt-3 rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-slate-700">
                         <p className="font-black text-blue-700">
-                          {lang === "ko" ? "건강 기록 요약" : "健康記録のまとめ"}
+                          {pickText(lang, "건강 기록 요약", "健康記録のまとめ")}
                         </p>
                         <div className="mt-2 grid grid-cols-1 gap-2">
                           {[
                             {
-                              label: lang === "ko" ? "광견병 다음 접종" : "狂犬病 次回",
+                              label: pickText(lang, "광견병 다음 접종", "狂犬病 次回"),
                               date: dogProfile.vaccination?.rabiesNextDate,
                             },
                             {
-                              label: lang === "ko" ? "혼합백신 다음 접종" : "混合ワクチン 次回",
+                              label: pickText(lang, "혼합백신 다음 접종", "混合ワクチン 次回"),
                               date: dogProfile.vaccination?.comboNextDate,
                             },
                             {
-                              label: lang === "ko" ? "심장사상충약 다음" : "フィラリア薬 次回",
+                              label: pickText(lang, "심장사상충약 다음", "フィラリア薬 次回"),
                               date: dogProfile.medication?.heartwormNextDate,
                             },
                             {
-                              label: lang === "ko" ? "벼룩, 진드기약 다음" : "ノミ・ダニ薬 次回",
+                              label: pickText(lang, "벼룩, 진드기약 다음", "ノミ・ダニ薬 次回"),
                               date: dogProfile.medication?.fleaTickNextDate,
                             },
                           ].map((item) => (
@@ -2829,7 +4534,7 @@ export default function Home() {
                       <div className="mt-3 rounded-2xl bg-emerald-50 p-3 text-xs leading-5 text-slate-700">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-black text-emerald-700">
-                            {lang === "ko" ? "자주 가는 병원" : "かかりつけ病院"}
+                            {pickText(lang, "자주 가는 병원", "かかりつけ病院")}
                           </p>
                           <button
                             type="button"
@@ -2837,31 +4542,27 @@ export default function Home() {
                             className="shrink-0 rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] font-black text-white"
                           >
                             {hasFavoriteVet
-                              ? lang === "ko"
-                                ? "수정"
-                                : "編集"
-                              : lang === "ko"
-                                ? "등록"
-                                : "登録"}
+                              ? pickText(lang, "수정", "編集")
+                              : pickText(lang, "등록", "登録")}
                           </button>
                         </div>
 
                         {hasFavoriteVet ? (
                           <div className="mt-2 rounded-2xl bg-white p-3">
                             <p className="text-sm font-black text-slate-700">
-                              {favoriteVet.name || (lang === "ko" ? "병원명 미입력" : "病院名未入力")}
+                              {favoriteVet.name || (pickText(lang, "병원명 미입력", "病院名未入力"))}
                             </p>
                             <p className="mt-1 text-xs text-slate-600">
-                              <span className="font-bold">{lang === "ko" ? "전화" : "電話"}: </span>
-                              {favoriteVet.phone || (lang === "ko" ? "미입력" : "未入力")}
+                              <span className="font-bold">{pickText(lang, "전화", "電話")}: </span>
+                              {favoriteVet.phone || (pickText(lang, "미입력", "未入力"))}
                             </p>
                             <p className="mt-1 line-clamp-1 text-xs text-slate-600">
-                              <span className="font-bold">{lang === "ko" ? "주소" : "住所"}: </span>
-                              {favoriteVet.address || (lang === "ko" ? "미입력" : "未入力")}
+                              <span className="font-bold">{pickText(lang, "주소", "住所")}: </span>
+                              {favoriteVet.address || (pickText(lang, "미입력", "未入力"))}
                             </p>
                             <p className="mt-1 line-clamp-1 text-xs text-slate-600">
-                              <span className="font-bold">{lang === "ko" ? "영업시간" : "診療時間"}: </span>
-                              {favoriteVet.openingHours || (lang === "ko" ? "미입력" : "未入力")}
+                              <span className="font-bold">{pickText(lang, "영업시간", "診療時間")}: </span>
+                              {favoriteVet.openingHours || (pickText(lang, "미입력", "未入力"))}
                             </p>
 
                             <div className="mt-2 grid grid-cols-3 gap-2">
@@ -2869,7 +4570,7 @@ export default function Home() {
                                 href={favoriteVetPhoneUrl || undefined}
                                 className={`rounded-2xl px-2 py-2 text-center text-xs font-black text-white shadow ${favoriteVetPhoneUrl ? "bg-emerald-500" : "bg-slate-300 pointer-events-none"}`}
                               >
-                                {lang === "ko" ? "전화" : "電話"}
+                                {pickText(lang, "전화", "電話")}
                               </a>
                               <a
                                 href={favoriteVetMapUrl || undefined}
@@ -2877,7 +4578,7 @@ export default function Home() {
                                 rel="noreferrer"
                                 className={`rounded-2xl px-2 py-2 text-center text-xs font-black text-white shadow ${favoriteVetMapUrl ? "bg-slate-900" : "bg-slate-300 pointer-events-none"}`}
                               >
-                                {lang === "ko" ? "지도" : "地図"}
+                                {pickText(lang, "지도", "地図")}
                               </a>
                               <a
                                 href={favoriteVetDirectionsUrl || undefined}
@@ -2885,17 +4586,71 @@ export default function Home() {
                                 rel="noreferrer"
                                 className={`rounded-2xl px-2 py-2 text-center text-xs font-black text-white shadow ${favoriteVetDirectionsUrl ? "bg-blue-500" : "bg-slate-300 pointer-events-none"}`}
                               >
-                                {lang === "ko" ? "길찾기" : "経路"}
+                                {pickText(lang, "길찾기", "経路")}
                               </a>
                             </div>
                           </div>
                         ) : (
                           <p className="mt-2 rounded-2xl bg-white px-3 py-2 text-slate-500">
-                            {lang === "ko"
-                              ? "자주 가는 병원을 등록해두면 응급 상황에서 바로 전화하거나 길찾기를 열 수 있어요."
-                              : "かかりつけ病院を登録しておくと、緊急時にすぐ電話・経路確認ができます。"}
+                            {pickText(lang, "자주 가는 병원을 등록해두면 응급 상황에서 바로 전화하거나 길찾기를 열 수 있어요.", "かかりつけ病院を登録しておくと、緊急時にすぐ電話・経路確認ができます。")}
                           </p>
                         )}
+                      </div>
+
+                      <div className="mt-3 rounded-2xl bg-rose-50 p-3 text-xs leading-5 text-slate-700">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-black text-rose-700">
+                            {multiText(lang, "건강 알림 카드", "健康お知らせカード", "Health alerts", "健康提醒")}
+                          </p>
+                          <span className={`rounded-full px-2 py-1 text-[10px] font-black ${urgentHealthAlertCount > 0 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
+                            {urgentHealthAlertCount > 0
+                              ? multiText(lang, `${urgentHealthAlertCount}개 확인`, `${urgentHealthAlertCount}件確認`, `${urgentHealthAlertCount} to check`, `${urgentHealthAlertCount}项需确认`)
+                              : multiText(lang, "괜찮아요", "大丈夫", "Looks okay", "没问题")}
+                          </span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-1 gap-2">
+                          {healthAlertItems.map((item) => (
+                            <div key={item.label} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-1.5">
+                              <span className="truncate font-bold">{item.label}</span>
+                              <span className={`shrink-0 rounded-full px-2 py-1 font-black ${item.className}`}>
+                                {item.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 rounded-2xl bg-purple-50 p-3 text-xs leading-5 text-slate-700">
+                        <p className="font-black text-purple-700">
+                          {multiText(lang, "강아지별 민감도 설정", "ワンちゃん別の注意設定", "Dog sensitivity settings", "狗狗敏感度设置")}
+                        </p>
+                        <p className="mt-1 text-slate-500">
+                          {multiText(lang, "체크한 항목이 있으면 산책 판단을 조금 더 보수적으로 보여줘요.", "チェックがあると、お散歩判断を少し慎重に表示します。", "Checked items make walk guidance more cautious.", "勾选后，散步判断会更保守。")}
+                        </p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {[
+                            ["heatWeak", multiText(lang, "더위에 약함", "暑さに弱い", "Heat sensitive", "怕热")],
+                            ["coldWeak", multiText(lang, "추위에 약함", "寒さに弱い", "Cold sensitive", "怕冷")],
+                            ["brachycephalic", multiText(lang, "단두종", "短頭種", "Flat-faced", "短鼻犬")],
+                            ["senior", multiText(lang, "노령견", "シニア犬", "Senior", "老年犬")],
+                            ["overweight", multiText(lang, "비만", "太り気味", "Overweight", "偏胖")],
+                            ["heartRespiratory", multiText(lang, "심장/호흡기", "心臓・呼吸器", "Heart/airway", "心脏/呼吸")],
+                            ["sensitivePaws", multiText(lang, "발바닥 예민", "肉球が敏感", "Sensitive paws", "脚掌敏感")],
+                          ].map(([key, label]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => toggleSensitivity(key as keyof DogSensitivity)}
+                              className={`rounded-2xl px-2 py-2 text-xs font-black shadow ${
+                                currentSensitivity[key as keyof DogSensitivity]
+                                  ? "bg-purple-500 text-white"
+                                  : "bg-white text-slate-700"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
@@ -2904,10 +4659,10 @@ export default function Home() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="text-sm font-black text-slate-700">
-                              {lang === "ko" ? "자주 가는 병원 등록" : "かかりつけ病院を登録"}
+                              {pickText(lang, "자주 가는 병원 등록", "かかりつけ病院を登録")}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
-                              {lang === "ko" ? "병원명, 전화번호, 주소를 저장해둘 수 있어요." : "病院名、電話番号、住所を保存できます。"}
+                              {pickText(lang, "병원명, 전화번호, 주소를 저장해둘 수 있어요.", "病院名、電話番号、住所を保存できます。")}
                             </p>
                           </div>
                           <button
@@ -2915,7 +4670,7 @@ export default function Home() {
                             onClick={() => setIsFavoriteVetEditorOpen(false)}
                             className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600"
                           >
-                            {lang === "ko" ? "닫기" : "閉じる"}
+                            {pickText(lang, "닫기", "閉じる")}
                           </button>
                         </div>
 
@@ -2923,31 +4678,31 @@ export default function Home() {
                           <input
                             value={favoriteVetNameInput}
                             onChange={(e) => setFavoriteVetNameInput(e.target.value)}
-                            placeholder={lang === "ko" ? "병원명" : "病院名"}
+                            placeholder={pickText(lang, "병원명", "病院名")}
                             className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
                           />
                           <input
                             value={favoriteVetPhoneInput}
                             onChange={(e) => setFavoriteVetPhoneInput(e.target.value)}
-                            placeholder={lang === "ko" ? "전화번호" : "電話番号"}
+                            placeholder={pickText(lang, "전화번호", "電話番号")}
                             className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
                           />
                           <input
                             value={favoriteVetAddressInput}
                             onChange={(e) => setFavoriteVetAddressInput(e.target.value)}
-                            placeholder={lang === "ko" ? "주소" : "住所"}
+                            placeholder={pickText(lang, "주소", "住所")}
                             className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
                           />
                           <input
                             value={favoriteVetHoursInput}
                             onChange={(e) => setFavoriteVetHoursInput(e.target.value)}
-                            placeholder={lang === "ko" ? "영업시간 / 야간 대응 메모" : "診療時間・夜間対応メモ"}
+                            placeholder={pickText(lang, "영업시간 / 야간 대응 메모", "診療時間・夜間対応メモ")}
                             className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
                           />
                           <input
                             value={favoriteVetMemoInput}
                             onChange={(e) => setFavoriteVetMemoInput(e.target.value)}
-                            placeholder={lang === "ko" ? "메모" : "メモ"}
+                            placeholder={pickText(lang, "메모", "メモ")}
                             className="rounded-2xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-emerald-400"
                           />
                         </div>
@@ -2958,21 +4713,21 @@ export default function Home() {
                             onClick={saveFavoriteVet}
                             className="rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-black text-white shadow"
                           >
-                            {lang === "ko" ? "저장" : "保存"}
+                            {pickText(lang, "저장", "保存")}
                           </button>
                           <button
                             type="button"
                             onClick={() => setIsFavoriteVetEditorOpen(false)}
                             className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 shadow"
                           >
-                            {lang === "ko" ? "취소" : "キャンセル"}
+                            {pickText(lang, "취소", "キャンセル")}
                           </button>
                           <button
                             type="button"
                             onClick={clearFavoriteVet}
                             className="rounded-2xl bg-red-50 px-3 py-2 text-xs font-black text-red-600 shadow"
                           >
-                            {lang === "ko" ? "삭제" : "削除"}
+                            {pickText(lang, "삭제", "削除")}
                           </button>
                         </div>
                       </div>
@@ -2984,10 +4739,10 @@ export default function Home() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-black text-slate-700">
-                            {lang === "ko" ? "강아지 건강 정보 수정" : "健康情報を編集"}
+                            {pickText(lang, "강아지 건강 정보 수정", "健康情報を編集")}
                           </p>
                           <p className="mt-1 truncate text-xs text-slate-500">
-                            {lang === "ko" ? "이 화면 안에서만 스크롤됩니다." : "この枠内だけスクロールします。"}
+                            {pickText(lang, "이 화면 안에서만 스크롤됩니다.", "この枠内だけスクロールします。")}
                           </p>
                         </div>
                         <button
@@ -2995,7 +4750,7 @@ export default function Home() {
                           onClick={() => setIsHealthEditorOpen(false)}
                           className="shrink-0 rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600"
                         >
-                          {lang === "ko" ? "닫기" : "閉じる"}
+                          {pickText(lang, "닫기", "閉じる")}
                         </button>
                       </div>
                     </div>
@@ -3004,7 +4759,7 @@ export default function Home() {
                       <div className="space-y-3">
                         <div className="rounded-3xl bg-slate-50 p-3">
                           <p className="mb-3 text-sm font-black text-slate-700">
-                            {lang === "ko" ? "강아지 개인 정보" : "ワンちゃん基本情報"}
+                            {pickText(lang, "강아지 개인 정보", "ワンちゃん基本情報")}
                           </p>
                           <div className="space-y-3">
                             <label className="block text-sm font-bold text-slate-700">
@@ -3026,14 +4781,14 @@ export default function Home() {
                               >
                                 {Object.entries(breedData).map(([key, breed]) => (
                                   <option key={key} value={key}>
-                                    {lang === "ko" ? breed.labelKo : breed.labelJa}
+                                    {getLabel(breed, lang, key)}
                                   </option>
                                 ))}
                               </select>
                             </div>
 
                             <label className="block text-sm font-bold text-slate-700">
-                              {lang === "ko" ? "생일" : "誕生日"}
+                              {pickText(lang, "생일", "誕生日")}
                               <input
                                 type="date"
                                 value={birthdayInput}
@@ -3043,22 +4798,22 @@ export default function Home() {
                             </label>
 
                             <label className="block text-sm font-bold text-slate-700">
-                              {lang === "ko" ? "체중 kg" : "体重 kg"}
+                              {pickText(lang, "체중 kg", "体重 kg")}
                               <input
                                 type="number"
                                 inputMode="decimal"
                                 value={weightInput}
                                 onChange={(e) => setWeightInput(e.target.value)}
-                                placeholder={lang === "ko" ? "예: 5.2" : "例：5.2"}
+                                placeholder={pickText(lang, "예: 5.2", "例：5.2")}
                                 className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-bold outline-none focus:border-blue-400"
                               />
                             </label>
 
                             <div className="grid grid-cols-3 gap-2">
                               {[
-                                { value: "unknown", ko: "미입력", ja: "未入力" },
-                                { value: "male", ko: "남아", ja: "男の子" },
-                                { value: "female", ko: "여아", ja: "女の子" },
+                                { value: "unknown", ko: "미입력", ja: "未入力", en: "Not entered", zh: "未填写" },
+                                { value: "male", ko: "남아", ja: "男の子", en: "Male", zh: "公狗" },
+                                { value: "female", ko: "여아", ja: "女の子", en: "Female", zh: "母狗" },
                               ].map((item) => (
                                 <button
                                   key={item.value}
@@ -3070,16 +4825,16 @@ export default function Home() {
                                       : "bg-white text-slate-700"
                                   }`}
                                 >
-                                  {lang === "ko" ? item.ko : item.ja}
+                                  {getOptionLabel(item, lang)}
                                 </button>
                               ))}
                             </div>
 
                             <div className="grid grid-cols-3 gap-2">
                               {[
-                                { value: "unknown", ko: "미입력", ja: "未入力" },
-                                { value: "yes", ko: "완료", ja: "済み" },
-                                { value: "no", ko: "미완료", ja: "未実施" },
+                                { value: "unknown", ko: "미입력", ja: "未入力", en: "Not entered", zh: "未填写" },
+                                { value: "yes", ko: "완료", ja: "済み", en: "Done", zh: "已完成" },
+                                { value: "no", ko: "미완료", ja: "未実施", en: "Not done", zh: "未完成" },
                               ].map((item) => (
                                 <button
                                   key={item.value}
@@ -3091,13 +4846,13 @@ export default function Home() {
                                       : "bg-white text-slate-700"
                                   }`}
                                 >
-                                  {lang === "ko" ? item.ko : item.ja}
+                                  {getOptionLabel(item, lang)}
                                 </button>
                               ))}
                             </div>
 
                             <label className="block text-sm font-bold text-slate-700">
-                              {lang === "ko" ? "주의 질병 / 알레르기" : "持病・アレルギー"}
+                              {pickText(lang, "주의 질병 / 알레르기", "持病・アレルギー")}
                               <textarea
                                 value={allergyInput}
                                 onChange={(e) => setAllergyInput(e.target.value)}
@@ -3106,7 +4861,7 @@ export default function Home() {
                             </label>
 
                             <label className="block text-sm font-bold text-slate-700">
-                              {lang === "ko" ? "추가 메모" : "追加メモ"}
+                              {pickText(lang, "추가 메모", "追加メモ")}
                               <textarea
                                 value={medicalNoteInput}
                                 onChange={(e) => setMedicalNoteInput(e.target.value)}
@@ -3118,18 +4873,18 @@ export default function Home() {
 
                         <div className="rounded-3xl bg-blue-50 p-3">
                           <p className="mb-3 text-sm font-black text-slate-700">
-                            {lang === "ko" ? "예방접종 기록" : "ワクチン記録"}
+                            {pickText(lang, "예방접종 기록", "ワクチン記録")}
                           </p>
                           {[
                             {
-                              title: lang === "ko" ? "광견병" : "狂犬病",
+                              title: pickText(lang, "광견병", "狂犬病"),
                               last: rabiesLastInput,
                               setLast: setRabiesLastInput,
                               next: rabiesNextInput,
                               setNext: setRabiesNextInput,
                             },
                             {
-                              title: lang === "ko" ? "혼합백신" : "混合ワクチン",
+                              title: pickText(lang, "혼합백신", "混合ワクチン"),
                               last: comboLastInput,
                               setLast: setComboLastInput,
                               next: comboNextInput,
@@ -3140,7 +4895,7 @@ export default function Home() {
                               <p className="text-sm font-black text-slate-700">{item.title}</p>
                               <div className="mt-2 grid grid-cols-1 gap-2">
                                 <label className="text-xs font-bold text-slate-600">
-                                  {lang === "ko" ? "마지막 날짜" : "最後の日付"}
+                                  {pickText(lang, "마지막 날짜", "最後の日付")}
                                   <input
                                     type="date"
                                     value={item.last}
@@ -3149,7 +4904,7 @@ export default function Home() {
                                   />
                                 </label>
                                 <label className="text-xs font-bold text-slate-600">
-                                  {lang === "ko" ? "다음 예정일" : "次回予定日"}
+                                  {pickText(lang, "다음 예정일", "次回予定日")}
                                   <input
                                     type="date"
                                     value={item.next}
@@ -3163,13 +4918,13 @@ export default function Home() {
 
                           <div className="rounded-2xl bg-white p-3">
                             <p className="text-sm font-black text-slate-700">
-                              {lang === "ko" ? "기타 백신" : "その他ワクチン"}
+                              {pickText(lang, "기타 백신", "その他ワクチン")}
                             </p>
                             <div className="mt-2 grid grid-cols-1 gap-2">
                               <input
                                 value={otherVaccineNameInput}
                                 onChange={(e) => setOtherVaccineNameInput(e.target.value)}
-                                placeholder={lang === "ko" ? "백신 이름" : "ワクチン名"}
+                                placeholder={pickText(lang, "백신 이름", "ワクチン名")}
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold outline-none focus:border-blue-400"
                               />
                               <input
@@ -3190,11 +4945,11 @@ export default function Home() {
 
                         <div className="rounded-3xl bg-amber-50 p-3">
                           <p className="mb-3 text-sm font-black text-slate-700">
-                            {lang === "ko" ? "투약 기록" : "投薬記録"}
+                            {pickText(lang, "투약 기록", "投薬記録")}
                           </p>
                           {[
                             {
-                              title: lang === "ko" ? "심장사상충약" : "フィラリア薬",
+                              title: pickText(lang, "심장사상충약", "フィラリア薬"),
                               med: heartwormMedicineInput,
                               setMed: setHeartwormMedicineInput,
                               last: heartwormLastInput,
@@ -3203,7 +4958,7 @@ export default function Home() {
                               setNext: setHeartwormNextInput,
                             },
                             {
-                              title: lang === "ko" ? "벼룩, 진드기약" : "ノミ・ダニ薬",
+                              title: pickText(lang, "벼룩, 진드기약", "ノミ・ダニ薬"),
                               med: fleaTickMedicineInput,
                               setMed: setFleaTickMedicineInput,
                               last: fleaTickLastInput,
@@ -3218,7 +4973,7 @@ export default function Home() {
                                 <input
                                   value={item.med}
                                   onChange={(e) => item.setMed(e.target.value)}
-                                  placeholder={lang === "ko" ? "약 종류" : "薬の種類"}
+                                  placeholder={pickText(lang, "약 종류", "薬の種類")}
                                   className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold outline-none focus:border-blue-400"
                                 />
                                 <input
@@ -3244,7 +4999,7 @@ export default function Home() {
                               onChange={(e) => setReminderEnabledInput(e.target.checked)}
                               className="h-5 w-5"
                             />
-                            {lang === "ko" ? "앱 안에서 알림 표시" : "アプリ内でお知らせ表示"}
+                            {pickText(lang, "앱 안에서 알림 표시", "アプリ内でお知らせ表示")}
                           </label>
                         </div>
                       </div>
@@ -3256,14 +5011,14 @@ export default function Home() {
                         onClick={saveHealthProfile}
                         className="rounded-2xl bg-blue-500 px-4 py-3 text-sm font-black text-white shadow-lg"
                       >
-                        {lang === "ko" ? "저장" : "保存"}
+                        {pickText(lang, "저장", "保存")}
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsHealthEditorOpen(false)}
                         className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 shadow"
                       >
-                        {lang === "ko" ? "취소" : "キャンセル"}
+                        {pickText(lang, "취소", "キャンセル")}
                       </button>
                     </div>
                   </div>
@@ -3274,20 +5029,129 @@ export default function Home() {
             {activePage === 2 && (
               <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
+                  <p className="text-sm font-black text-slate-700">
+                    {multiText(lang, "오늘 산책 기록", "今日のお散歩記録", "Today’s walk log", "今日散步记录")}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    {multiText(lang, "산책했댕! 배변·소변·물·컨디션을 간단히 남겨요.", "お散歩したワン！トイレ・水分・体調を簡単に記録できます。", "Log walks, potty, water, and condition in a few taps.", "记录散步、排便、喝水和状态。")}
+                  </p>
+                </div>
+
+                <div className="shrink-0 rounded-3xl bg-blue-50 p-3 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => updateWalkRecord({ walked: !currentWalkRecord.walked })}
+                    className={`w-full rounded-3xl px-4 py-4 text-lg font-black shadow ${
+                      currentWalkRecord.walked ? "bg-blue-500 text-white" : "bg-white text-slate-700"
+                    }`}
+                  >
+                    {currentWalkRecord.walked
+                      ? multiText(lang, "산책했댕! ✅", "お散歩したワン！✅", "Walk done! ✅", "已散步汪！✅")
+                      : multiText(lang, "오늘 산책 체크하기", "今日のお散歩を記録", "Mark today’s walk", "记录今天散步")}
+                  </button>
+
+                  <div className="mt-3">
+                    <p className="mb-2 text-xs font-black text-blue-700">
+                      {multiText(lang, "산책 시간", "お散歩時間", "Walk duration", "散步时间")}
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[10, 20, 30, 60].map((minutes) => (
+                        <button
+                          key={minutes}
+                          type="button"
+                          onClick={() => updateWalkRecord({ minutes })}
+                          className={`rounded-2xl px-2 py-3 text-xs font-black shadow ${
+                            currentWalkRecord.minutes === minutes ? "bg-slate-900 text-white" : "bg-white text-slate-700"
+                          }`}
+                        >
+                          {minutes}{multiText(lang, "분", "分", "min", "分钟")}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid shrink-0 grid-cols-3 gap-2">
+                  {[
+                    ["poop", multiText(lang, "배변했댕", "うんちOK", "Poop", "便便")],
+                    ["pee", multiText(lang, "소변했댕", "おしっこOK", "Pee", "尿尿")],
+                    ["drankWater", multiText(lang, "물 마셨댕", "水分OK", "Water", "喝水")],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => updateWalkRecord({ [key]: !currentWalkRecord[key as "poop" | "pee" | "drankWater"] } as Partial<DailyWalkRecord>)}
+                      className={`rounded-3xl px-2 py-4 text-xs font-black shadow ${
+                        currentWalkRecord[key as "poop" | "pee" | "drankWater"]
+                          ? "bg-green-500 text-white"
+                          : "bg-white text-slate-700"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
+                  <p className="mb-2 text-xs font-black text-slate-700">
+                    {multiText(lang, "오늘 컨디션", "今日の体調", "Condition", "今天状态")}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      ["good", multiText(lang, "좋음", "良い", "Good", "良好")],
+                      ["normal", multiText(lang, "보통", "普通", "Normal", "普通")],
+                      ["bad", multiText(lang, "나쁨", "悪い", "Bad", "不好")],
+                    ].map(([condition, label]) => (
+                      <button
+                        key={condition}
+                        type="button"
+                        onClick={() => updateWalkRecord({ condition: condition as DailyWalkRecord["condition"] })}
+                        className={`rounded-2xl px-2 py-3 text-xs font-black shadow ${
+                          currentWalkRecord.condition === condition ? "bg-orange-500 text-white" : "bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <textarea
+                    value={currentWalkRecord.memo}
+                    onChange={(event) => updateWalkRecord({ memo: event.target.value })}
+                    placeholder={multiText(lang, "메모: 더워해서 짧게 끝냄", "メモ：暑そうで短めにした", "Memo: seemed hot, kept it short", "备注：看起来热，缩短了散步")}
+                    className="mt-3 min-h-20 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold outline-none focus:border-blue-400"
+                  />
+
+                  <p className="mt-2 text-center text-xs font-bold text-slate-500">
+                    {currentWalkRecord.savedAt
+                      ? multiText(lang, "저장됐댕!", "保存したワン！", "Saved!", "已保存汪！")
+                      : multiText(lang, "기록은 자동 저장돼요.", "記録は自動保存されます。", "Your log is saved automatically.", "记录会自动保存。")}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activePage === 3 && (
+              <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "계절별 / 현재 유행 위험 정보" : "季節別・現在の注意情報"}
+                        {pickText(lang, "계절별 / 현재 유행 위험 정보", "季節別・現在の注意情報")}
                       </p>
                       <p className="mt-1 text-xs leading-4 text-slate-500">
                         {lang === "ko"
                           ? `${currentSeasonName} 산책에서 특히 주의할 내용을 모았어요.`
-                          : `${currentSeasonName}のお散歩で特に気をつけたいポイントです。`}
+                          : lang === "ja"
+                            ? `${currentSeasonName}のお散歩で特に気をつけたいポイントです。`
+                            : lang === "en"
+                              ? `Key things to watch for during ${currentSeasonName} walks.`
+                              : `${currentSeasonName}遛狗时需要特别注意的内容。`}
                       </p>
                     </div>
                     <div className="shrink-0 rounded-2xl bg-blue-50 px-3 py-2 text-center">
                       <p className="text-[10px] font-bold text-blue-500">
-                        {lang === "ko" ? "현재 시즌" : "現在の季節"}
+                        {pickText(lang, "현재 시즌", "現在の季節")}
                       </p>
                       <p className="text-sm font-black text-blue-700">{currentSeasonName}</p>
                     </div>
@@ -3316,13 +5180,13 @@ export default function Home() {
 
                     <div className="rounded-3xl bg-slate-50 p-3">
                       <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "산책 후 체크" : "散歩後チェック"}
+                        {pickText(lang, "산책 후 체크", "散歩後チェック")}
                       </p>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-xs leading-4 text-slate-700">
-                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "발 / 발바닥" : "足・肉球"}</div>
-                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "귀 뒤 / 겨드랑이" : "耳の後ろ・わき"}</div>
-                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "배 / 꼬리 주변" : "お腹・しっぽ周り"}</div>
-                        <div className="rounded-2xl bg-white px-3 py-2">{lang === "ko" ? "호흡 / 탈수" : "呼吸・脱水"}</div>
+                        <div className="rounded-2xl bg-white px-3 py-2">{pickText(lang, "발 / 발바닥", "足・肉球")}</div>
+                        <div className="rounded-2xl bg-white px-3 py-2">{pickText(lang, "귀 뒤 / 겨드랑이", "耳の後ろ・わき")}</div>
+                        <div className="rounded-2xl bg-white px-3 py-2">{pickText(lang, "배 / 꼬리 주변", "お腹・しっぽ周り")}</div>
+                        <div className="rounded-2xl bg-white px-3 py-2">{pickText(lang, "호흡 / 탈수", "呼吸・脱水")}</div>
                       </div>
                     </div>
                   </div>
@@ -3330,22 +5194,20 @@ export default function Home() {
               </div>
             )}
 
-            {activePage === 3 && (
+            {activePage === 4 && (
               <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "근처 강아지 산책 장소" : "近くのワンちゃん散歩スポット"}
+                        {pickText(lang, "근처 강아지 산책 장소", "近くのワンちゃん散歩スポット")}
                       </p>
                       <p className="mt-1 text-xs leading-4 text-slate-500">
-                        {lang === "ko"
-                          ? "무료 지도 데이터를 바탕으로 공원, 산책로, 강변길, 녹지, 도그 파크를 보여줘요."
-                          : "無料の地図データをもとに、公園・散歩道・川辺・緑地・ドッグパークを表示します。"}
+                        {pickText(lang, "무료 지도 데이터를 바탕으로 공원, 산책로, 강변길, 녹지, 도그 파크를 보여줘요.", "無料の地図データをもとに、公園・散歩道・川辺・緑地・ドッグパークを表示します。")}
                       </p>
                     </div>
                     <div className="shrink-0 rounded-2xl bg-green-50 px-3 py-2 text-center">
-                      <p className="text-[10px] font-bold text-green-600">{lang === "ko" ? "근처 검색" : "周辺検索"}</p>
+                      <p className="text-[10px] font-bold text-green-600">{pickText(lang, "근처 검색", "周辺検索")}</p>
                       <p className="text-sm font-black text-green-700">5km</p>
                     </div>
                   </div>
@@ -3354,46 +5216,40 @@ export default function Home() {
                 <div className="shrink-0 overflow-visible rounded-3xl bg-white p-3 shadow">
                   <div className="space-y-2">
                     <div className="rounded-2xl bg-green-50 px-3 py-2 text-xs leading-5 text-slate-700">
-                      <p className="font-black text-green-700">{lang === "ko" ? "안내" : "ご案内"}</p>
+                      <p className="font-black text-green-700">{pickText(lang, "안내", "ご案内")}</p>
                       <p className="mt-1">
-                        {lang === "ko"
-                          ? "공원과 산책로는 공개 지도 데이터 기준이라 실제 출입 가능 여부나 반려견 허용 규칙은 현장 표지판을 함께 확인해주세요."
-                          : "公園や散歩道は公開地図データをもとに表示しています。実際の利用可否や犬同伴ルールは現地の案内もご確認ください。"}
+                        {pickText(lang, "공원과 산책로는 공개 지도 데이터 기준이라 실제 출입 가능 여부나 반려견 허용 규칙은 현장 표지판을 함께 확인해주세요.", "公園や散歩道は公開地図データをもとに表示しています。実際の利用可否や犬同伴ルールは現地の案内もご確認ください。")}
                       </p>
                     </div>
 
                     <a
                       href={
                         latitude !== null && longitude !== null
-                          ? `https://www.google.com/maps/search/${encodeURIComponent(lang === "ko" ? "근처 공원 산책로" : "近く 公園 散歩道")}/@${latitude},${longitude},14z`
-                          : `https://www.google.com/maps/search/${encodeURIComponent(lang === "ko" ? "근처 공원 산책로" : "近く 公園 散歩道")}`
+                          ? `https://www.google.com/maps/search/${encodeURIComponent(pickText(lang, "근처 공원 산책로", "近く 公園 散歩道"))}/@${latitude},${longitude},14z`
+                          : `https://www.google.com/maps/search/${encodeURIComponent(pickText(lang, "근처 공원 산책로", "近く 公園 散歩道"))}`
                       }
                       target="_blank"
                       rel="noreferrer"
                       className="block rounded-2xl bg-green-600 px-3 py-2 text-center text-xs font-black text-white shadow"
                     >
-                      {lang === "ko" ? "Google 지도에서 산책 장소 바로 보기" : "Googleマップで散歩スポットを見る"}
+                      {pickText(lang, "Google 지도에서 산책 장소 바로 보기", "Googleマップで散歩スポットを見る")}
                     </a>
 
                     {isLoadingDogSpots && (
                       <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
-                        {lang === "ko" ? "근처 산책 장소를 찾는 중이에요..." : "近くの散歩スポットを探しています..."}
+                        {pickText(lang, "근처 산책 장소를 찾는 중이에요...", "近くの散歩スポットを探しています...")}
                       </div>
                     )}
 
                     {!isLoadingDogSpots && dogSpotFetchStatus === "empty" && (
                       <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
-                        {lang === "ko"
-                          ? "근처 산책 장소를 찾지 못했어요. 위치 권한이나 네트워크를 확인해주세요."
-                          : "近くの散歩スポットが見つかりませんでした。位置情報または通信状況をご確認ください。"}
+                        {pickText(lang, "근처 산책 장소를 찾지 못했어요. 위치 권한이나 네트워크를 확인해주세요.", "近くの散歩スポットが見つかりませんでした。位置情報または通信状況をご確認ください。")}
                       </div>
                     )}
 
                     {!isLoadingDogSpots && dogSpotFetchStatus === "error" && (
                       <div className="rounded-3xl bg-red-50 px-4 py-6 text-center text-sm font-bold text-red-600">
-                        {lang === "ko"
-                          ? "산책 장소 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
-                          : "散歩スポット情報を取得できませんでした。しばらくしてから再度お試しください。"}
+                        {pickText(lang, "산책 장소 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.", "散歩スポット情報を取得できませんでした。しばらくしてから再度お試しください。")}
                       </div>
                     )}
 
@@ -3403,7 +5259,7 @@ export default function Home() {
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-black text-slate-700">{spot.name}</p>
                             <p className="mt-1 text-xs font-bold text-slate-500">
-                              {lang === "ko" ? "현재 위치에서 " : "現在地から "}
+                              {pickText(lang, "현재 위치에서 ", "現在地から ")}
                               {formatDistanceText(spot.distanceKm, lang)}
                             </p>
                           </div>
@@ -3419,7 +5275,7 @@ export default function Home() {
                             rel="noreferrer"
                             className="rounded-2xl bg-slate-900 px-2 py-2 text-center text-xs font-black text-white shadow"
                           >
-                            {lang === "ko" ? "지도" : "地図"}
+                            {pickText(lang, "지도", "地図")}
                           </a>
                           <a
                             href={spot.directionsUrl}
@@ -3427,20 +5283,90 @@ export default function Home() {
                             rel="noreferrer"
                             className="rounded-2xl bg-green-500 px-2 py-2 text-center text-xs font-black text-white shadow"
                           >
-                            {lang === "ko" ? "길찾기" : "経路"}
+                            {pickText(lang, "길찾기", "経路")}
                           </a>
                         </div>
                       </div>
                     ))}
 
-                    <div className="rounded-3xl bg-amber-50 p-3">
-                      <p className="text-sm font-black text-amber-700">
-                        {lang === "ko" ? "강아지 동반 카페 / 식당 찾기" : "犬同伴カフェ・レストランを探す"}
+                    <div className="rounded-3xl bg-lime-50 p-3">
+                      <p className="text-sm font-black text-lime-700">
+                        {multiText(lang, "즐겨찾는 산책 장소", "お気に入り散歩スポット", "Favorite walk spots", "收藏散步地点")}
                       </p>
                       <p className="mt-1 text-xs leading-5 text-slate-600">
-                        {lang === "ko"
-                          ? "정확한 반려견 동반 가능 여부는 가게마다 달라서, 지금은 Google 검색 버튼으로 연결해드려요."
-                          : "犬同伴可否は店舗ごとに異なるため、今はGoogle検索ボタンで確認できるようにしています。"}
+                        {multiText(lang, "무료 지도 검색이 부족할 때를 위해 자주 가는 곳을 직접 저장해둘 수 있어요.", "地図検索が不十分なときのために、よく行く場所を保存できます。", "Save your go-to spots when map search is not enough.", "地图搜索不够时，可以自己保存常去地点。")}
+                      </p>
+
+                      <div className="mt-2 grid grid-cols-1 gap-2">
+                        <input
+                          value={favoritePlaceNameInput}
+                          onChange={(event) => setFavoritePlaceNameInput(event.target.value)}
+                          placeholder={multiText(lang, "장소 이름 예: 집 앞 공원", "場所名 例：近所の公園", "Name: neighborhood park", "地点名：家附近公园")}
+                          className="rounded-2xl border border-lime-100 bg-white px-3 py-2 text-xs font-bold outline-none focus:border-lime-400"
+                        />
+                        <input
+                          value={favoritePlaceQueryInput}
+                          onChange={(event) => setFavoritePlaceQueryInput(event.target.value)}
+                          placeholder={multiText(lang, "주소/검색어", "住所・検索語", "Address/search keyword", "地址/搜索词")}
+                          className="rounded-2xl border border-lime-100 bg-white px-3 py-2 text-xs font-bold outline-none focus:border-lime-400"
+                        />
+                        <input
+                          value={favoritePlaceMemoInput}
+                          onChange={(event) => setFavoritePlaceMemoInput(event.target.value)}
+                          placeholder={multiText(lang, "메모 예: 저녁에 그늘 많음", "メモ 例：夕方は日陰多め", "Memo: shady in evening", "备注：傍晚阴凉多")}
+                          className="rounded-2xl border border-lime-100 bg-white px-3 py-2 text-xs font-bold outline-none focus:border-lime-400"
+                        />
+                        <button
+                          type="button"
+                          onClick={addFavoritePlace}
+                          className="rounded-2xl bg-lime-500 px-3 py-2 text-xs font-black text-white shadow"
+                        >
+                          {multiText(lang, "즐겨찾기 저장", "お気に入り保存", "Save favorite", "保存收藏")}
+                        </button>
+                      </div>
+
+                      {favoritePlaces.length > 0 && (
+                        <div className="mt-2 grid grid-cols-1 gap-2">
+                          {favoritePlaces.map((place) => {
+                            const mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(place.query || place.name)}`;
+                            const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.query || place.name)}`;
+
+                            return (
+                              <div key={place.id} className="rounded-2xl bg-white p-3">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <p className="truncate text-xs font-black text-slate-700">{place.name}</p>
+                                    {place.memo && <p className="mt-1 line-clamp-1 text-[11px] text-slate-500">{place.memo}</p>}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeFavoritePlace(place.id)}
+                                    className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-500"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                                <div className="mt-2 grid grid-cols-2 gap-2">
+                                  <a href={mapUrl} target="_blank" rel="noreferrer" className="rounded-2xl bg-slate-900 px-2 py-2 text-center text-xs font-black text-white shadow">
+                                    {pickText(lang, "지도", "地図")}
+                                  </a>
+                                  <a href={directionsUrl} target="_blank" rel="noreferrer" className="rounded-2xl bg-green-500 px-2 py-2 text-center text-xs font-black text-white shadow">
+                                    {pickText(lang, "길찾기", "経路")}
+                                  </a>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-3xl bg-amber-50 p-3">
+                      <p className="text-sm font-black text-amber-700">
+                        {pickText(lang, "강아지 동반 카페 / 식당 찾기", "犬同伴カフェ・レストランを探す")}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                        {pickText(lang, "정확한 반려견 동반 가능 여부는 가게마다 달라서, 지금은 Google 검색 버튼으로 연결해드려요.", "犬同伴可否は店舗ごとに異なるため、今はGoogle検索ボタンで確認できるようにしています。")}
                       </p>
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         <a
@@ -3449,7 +5375,7 @@ export default function Home() {
                           rel="noreferrer"
                           className="rounded-2xl bg-amber-500 px-2 py-2 text-center text-xs font-black text-white shadow"
                         >
-                          {lang === "ko" ? "카페 찾기" : "カフェ検索"}
+                          {pickText(lang, "카페 찾기", "カフェ検索")}
                         </a>
                         <a
                           href={dogRestaurantSearchUrl}
@@ -3457,7 +5383,7 @@ export default function Home() {
                           rel="noreferrer"
                           className="rounded-2xl bg-orange-500 px-2 py-2 text-center text-xs font-black text-white shadow"
                         >
-                          {lang === "ko" ? "식당 찾기" : "レストラン検索"}
+                          {pickText(lang, "식당 찾기", "レストラン検索")}
                         </a>
                       </div>
                     </div>
@@ -3466,22 +5392,20 @@ export default function Home() {
               </div>
             )}
 
-            {activePage === 4 && (
+            {activePage === 5 && (
               <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-black text-slate-700">
-                        {lang === "ko" ? "20km 이내 24시간 동물병원 후보" : "20km以内の24時間動物病院候補"}
+                        {pickText(lang, "20km 이내 24시간 동물병원 후보", "20km以内の24時間動物病院候補")}
                       </p>
                       <p className="mt-1 text-xs leading-4 text-slate-500">
-                        {lang === "ko"
-                          ? "현재 위치 기준 20km 이내에서 공개 데이터에 24시간 표시가 있는 병원만 보여줘요."
-                          : "現在地から20km以内で、公開データに24時間表示がある病院だけを表示します。"}
+                        {pickText(lang, "현재 위치 기준 20km 이내에서 공개 데이터에 24시간 표시가 있는 병원만 보여줘요.", "現在地から20km以内で、公開データに24時間表示がある病院だけを表示します。")}
                       </p>
                     </div>
                     <div className="shrink-0 rounded-2xl bg-blue-50 px-3 py-2 text-center">
-                      <p className="text-[10px] font-bold text-blue-500">{lang === "ko" ? "검색 범위" : "検索範囲"}</p>
+                      <p className="text-[10px] font-bold text-blue-500">{pickText(lang, "검색 범위", "検索範囲")}</p>
                       <p className="text-sm font-black text-blue-700">20km</p>
                     </div>
                   </div>
@@ -3491,12 +5415,10 @@ export default function Home() {
                   <div className="space-y-2">
                     <div className="rounded-2xl bg-blue-50 px-3 py-2 text-xs leading-5 text-slate-700">
                       <p className="font-black text-blue-700">
-                        {lang === "ko" ? "안내" : "ご案内"}
+                        {pickText(lang, "안내", "ご案内")}
                       </p>
                       <p className="mt-1">
-                        {lang === "ko"
-                          ? "일반 가까운 병원은 제외하고, 24시간 표시가 있는 후보만 보여줘요. 단, 공개 데이터가 틀릴 수 있으니 정보확인 버튼으로 주소·전화번호·진료시간을 반드시 확인해주세요."
-                          : "通常の近い病院は除外し、24時間表示がある候補だけを表示します。ただし公開データが誤っている場合があるため、情報確認ボタンで住所・電話番号・診療時間を必ず確認してください。"}
+                        {pickText(lang, "일반 가까운 병원은 제외하고, 24시간 표시가 있는 후보만 보여줘요. 단, 공개 데이터가 틀릴 수 있으니 정보확인 버튼으로 주소·전화번호·진료시간을 반드시 확인해주세요.", "通常の近い病院は除外し、24時間表示がある候補だけを表示します。ただし公開データが誤っている場合があるため、情報確認ボタンで住所・電話番号・診療時間を必ず確認してください。")}
                       </p>
                     </div>
 
@@ -3506,21 +5428,19 @@ export default function Home() {
                       rel="noreferrer"
                       className="block rounded-2xl bg-blue-600 px-3 py-2 text-center text-xs font-black text-white shadow"
                     >
-                      {lang === "ko" ? "Google 지도에서 24시간 동물병원 검색" : "Googleマップで24時間動物病院を検索"}
+                      {pickText(lang, "Google 지도에서 24시간 동물병원 검색", "Googleマップで24時間動物病院を検索")}
                     </a>
 
                     {isLoadingVets && (
                       <div className="rounded-3xl bg-slate-50 px-4 py-6 text-center text-sm font-bold text-slate-500">
-                        {lang === "ko" ? "20km 이내 24시간 동물병원 후보를 찾는 중이에요..." : "20km以内の24時間動物病院候補を探しています..."}
+                        {pickText(lang, "20km 이내 24시간 동물병원 후보를 찾는 중이에요...", "20km以内の24時間動物病院候補を探しています...")}
                       </div>
                     )}
 
                     {!isLoadingVets && vetFetchStatus === "empty" && (
                       <div className="rounded-3xl bg-slate-50 px-4 py-5 text-center text-sm font-bold text-slate-500">
                         <p>
-                          {lang === "ko"
-                            ? "공개 지도 데이터에서 20km 이내 24시간 표시 후보를 찾지 못했어요."
-                            : "公開地図データでは20km以内の24時間表示候補が見つかりませんでした。"}
+                          {pickText(lang, "공개 지도 데이터에서 20km 이내 24시간 표시 후보를 찾지 못했어요.", "公開地図データでは20km以内の24時間表示候補が見つかりませんでした。")}
                         </p>
                         <a
                           href={emergencyVetSearchUrl}
@@ -3528,16 +5448,14 @@ export default function Home() {
                           rel="noreferrer"
                           className="mt-3 inline-flex rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow"
                         >
-                          {lang === "ko" ? "정보확인" : "情報確認"}
+                          {pickText(lang, "정보확인", "情報確認")}
                         </a>
                       </div>
                     )}
 
                     {!isLoadingVets && vetFetchStatus === "error" && (
                       <div className="rounded-3xl bg-red-50 px-4 py-6 text-center text-sm font-bold text-red-600">
-                        {lang === "ko"
-                          ? "동물병원 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
-                          : "動物病院情報を取得できませんでした。しばらくしてから再度お試しください。"}
+                        {pickText(lang, "동물병원 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.", "動物病院情報を取得できませんでした。しばらくしてから再度お試しください。")}
                       </div>
                     )}
 
@@ -3547,7 +5465,7 @@ export default function Home() {
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-black text-slate-700">{clinic.name}</p>
                             <p className="mt-1 text-xs font-bold text-slate-500">
-                              {lang === "ko" ? "현재 위치에서 " : "現在地から "}
+                              {pickText(lang, "현재 위치에서 ", "現在地から ")}
                               {formatDistanceText(clinic.distanceKm, lang)}
                             </p>
                           </div>
@@ -3559,9 +5477,7 @@ export default function Home() {
                         <div className="mt-2 space-y-1 rounded-2xl bg-white px-3 py-3 text-xs leading-5 text-slate-700">
                           <p className="text-[11px] text-slate-500">{clinic.note}</p>
                           <p className="text-[11px] text-slate-500">
-                            {lang === "ko"
-                              ? "주소·전화번호·진료시간은 정보확인 버튼에서 최신 페이지로 확인해주세요."
-                              : "住所・電話番号・診療時間は情報確認ボタンから最新ページで確認してください。"}
+                            {pickText(lang, "주소·전화번호·진료시간은 정보확인 버튼에서 최신 페이지로 확인해주세요.", "住所・電話番号・診療時間は情報確認ボタンから最新ページで確認してください。")}
                           </p>
                         </div>
 
@@ -3570,7 +5486,7 @@ export default function Home() {
                             href={clinic.phoneUrl || undefined}
                             className={`rounded-2xl px-2 py-2 text-center text-[11px] font-black text-white shadow ${clinic.phoneUrl ? "bg-emerald-500" : "bg-slate-300 pointer-events-none"}`}
                           >
-                            {lang === "ko" ? "전화" : "電話"}
+                            {pickText(lang, "전화", "電話")}
                           </a>
                           <a
                             href={clinic.infoUrl}
@@ -3578,7 +5494,7 @@ export default function Home() {
                             rel="noreferrer"
                             className="rounded-2xl bg-amber-500 px-2 py-2 text-center text-[11px] font-black text-white shadow"
                           >
-                            {lang === "ko" ? "정보확인" : "情報確認"}
+                            {pickText(lang, "정보확인", "情報確認")}
                           </a>
                           <a
                             href={clinic.directionsUrl}
@@ -3586,7 +5502,7 @@ export default function Home() {
                             rel="noreferrer"
                             className="rounded-2xl bg-blue-500 px-2 py-2 text-center text-[11px] font-black text-white shadow"
                           >
-                            {lang === "ko" ? "길찾기" : "経路"}
+                            {pickText(lang, "길찾기", "経路")}
                           </a>
                         </div>
                       </div>
@@ -3596,7 +5512,7 @@ export default function Home() {
               </div>
             )}
 
-            {activePage === 5 && (
+            {activePage === 6 && (
               <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div className="shrink-0 rounded-3xl bg-white p-3 shadow">
                   <div className="flex items-start justify-between gap-3">
@@ -3646,24 +5562,24 @@ export default function Home() {
 
                   <div className="mt-2 space-y-1 text-[11px] font-bold leading-4">
                     <div className="flex justify-between rounded-xl bg-green-100 px-3 py-1 text-green-800">
-                      <span>{lang === "ko" ? "35℃ 이하" : "35℃以下"}</span>
-                      <span>{lang === "ko" ? "산책 가능" : "お散歩可能"}</span>
+                      <span>{pickText(lang, "35℃ 이하", "35℃以下")}</span>
+                      <span>{pickText(lang, "산책 가능", "お散歩可能")}</span>
                     </div>
                     <div className="flex justify-between rounded-xl bg-yellow-100 px-3 py-1 text-yellow-800">
                       <span>36–40℃</span>
-                      <span>{lang === "ko" ? "짧게 가능" : "短めなら可能"}</span>
+                      <span>{pickText(lang, "짧게 가능", "短めなら可能")}</span>
                     </div>
                     <div className="flex justify-between rounded-xl bg-orange-100 px-3 py-1 text-orange-800">
                       <span>41–45℃</span>
-                      <span>{lang === "ko" ? "주의 필요" : "注意が必要"}</span>
+                      <span>{pickText(lang, "주의 필요", "注意が必要")}</span>
                     </div>
                     <div className="flex justify-between rounded-xl bg-red-100 px-3 py-1 text-red-700">
                       <span>46–50℃</span>
-                      <span>{lang === "ko" ? "위험" : "危険"}</span>
+                      <span>{pickText(lang, "위험", "危険")}</span>
                     </div>
                     <div className="flex justify-between rounded-xl bg-zinc-200 px-3 py-1 text-zinc-800">
-                      <span>{lang === "ko" ? "50℃ 이상" : "50℃以上"}</span>
-                      <span>{lang === "ko" ? "산책 피하기" : "お散歩を避ける"}</span>
+                      <span>{pickText(lang, "50℃ 이상", "50℃以上")}</span>
+                      <span>{pickText(lang, "산책 피하기", "お散歩を避ける")}</span>
                     </div>
                   </div>
 
@@ -3715,7 +5631,7 @@ export default function Home() {
 
                   <details className="mt-2 rounded-2xl bg-blue-50 px-3 py-2 text-[10px] leading-4 text-slate-600">
                     <summary className="cursor-pointer font-bold text-slate-700">
-                      {lang === "ko" ? "공유용 소개문 보기" : "紹介文を見る"}
+                      {pickText(lang, "공유용 소개문 보기", "紹介文を見る")}
                     </summary>
                     <p className="mt-1 max-h-16 overflow-y-auto whitespace-pre-line [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {getShareText(lang)}
@@ -3738,7 +5654,7 @@ export default function Home() {
           </button>
 
           <div className="flex items-center gap-2">
-            {[0, 1, 2, 3, 4, 5].map((page) => (
+            {[0, 1, 2, 3, 4, 5, 6].map((page) => (
               <button
                 key={page}
                 type="button"
@@ -3753,9 +5669,9 @@ export default function Home() {
 
           <button
             type="button"
-            onClick={() => setActivePage((page) => Math.min(page + 1, 5))}
+            onClick={() => setActivePage((page) => Math.min(page + 1, 6))}
             className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-black text-white disabled:bg-slate-300"
-            disabled={activePage === 5}
+            disabled={activePage === 6}
           >
             →
           </button>
