@@ -415,7 +415,6 @@ function calculateGroundTemperature(
   weather: WeatherData | HourlyWeather | null
 ) {
   const surfaceHeat = surfaceHeatData[surface];
-  const sunExposure = sunExposureData[sun];
 
   const radiation = weather ? clampNumber(weather.radiation, 0, 900) : 0;
   const radiationFactor = radiation / 900;
@@ -423,21 +422,38 @@ function calculateGroundTemperature(
   const windSpeed = weather ? Math.max(weather.windSpeed, 0) : 0;
   const uvIndex = weather?.uvIndex ?? 0;
 
-  const solarHeating =
-    surfaceHeat.maxSolarHeat * radiationFactor * sunExposure;
-  const uvHeating =
-    Math.min(uvIndex * 0.45, 4) * radiationFactor * sunExposure;
-  const cloudCooling = (cloudCover / 100) * 4 * sunExposure;
-  const windCooling = Math.min(windSpeed * 0.25, 5);
+  // 실제 일사량(shortwave radiation)을 중심으로 계산합니다.
+  // 기존 계산식은 구름 냉각값이 햇빛상태와 함께 커져서,
+  // 직사광선이 그늘보다 낮게 나오는 역전 현상이 생길 수 있었습니다.
+  const cloudDamping = 1 - (cloudCover / 100) * 0.25;
+  const windCooling = Math.min(windSpeed * 0.18, 3.5);
+  const baseTemperature =
+    airTemperature + surfaceHeat.storedHeat - windCooling;
 
-  return Math.round(
-    airTemperature +
-      surfaceHeat.storedHeat +
-      solarHeating +
-      uvHeating -
-      cloudCooling -
-      windCooling
+  const calculateByExposure = (exposure: number, shadeCooling: number) => {
+    const solarHeating =
+      surfaceHeat.maxSolarHeat * radiationFactor * cloudDamping * exposure;
+    const uvHeating =
+      Math.min(uvIndex * 0.3, 3) * radiationFactor * cloudDamping * exposure;
+
+    return Math.round(
+      baseTemperature + solarHeating + uvHeating - shadeCooling
+    );
+  };
+
+  const shadeTemperature = calculateByExposure(0.05, 0.8);
+  const partialTemperature = Math.max(
+    shadeTemperature,
+    calculateByExposure(0.45, 0.3)
   );
+  const directTemperature = Math.max(
+    partialTemperature,
+    calculateByExposure(1, 0)
+  );
+
+  if (sun === "direct") return directTemperature;
+  if (sun === "partial") return partialTemperature;
+  return shadeTemperature;
 }
 
 function getAirQualityValues(
